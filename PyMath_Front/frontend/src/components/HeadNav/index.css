@@ -1,0 +1,14 @@
+.header {
+  display: flex;
+  justify-content: space-around;
+}
+.header .header-title {
+  font-size: 30px;
+  color: #666;
+}
+.header .header-user {
+  display: flex;
+}
+.header .header-user .infoButton{
+  margin-left: 50px;
+}
