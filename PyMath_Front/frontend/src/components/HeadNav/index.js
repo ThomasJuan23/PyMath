@@ -94,7 +94,7 @@ class MHeader extends Component {
   }
 
   render() {
-    const user = memoryUtils.user;
+    const user = "sfsd";
     const { num , count } = this.state;
     // const user = this.props.user;
     console.log(user.username + '123');

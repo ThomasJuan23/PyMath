@@ -81,7 +81,7 @@ class LeftNav extends Component {
                 <div className="logo">
                     <Link className='left-nav-link' to='/home'>
                         <img src={Logo} alt="" />
-                        <h1>find a service</h1>
+                        <h1>PyMath</h1>
                     </Link>
                 </div>
 
@@ -93,27 +93,12 @@ class LeftNav extends Component {
                     <Menu.Item key="/home">
                         <DesktopOutlined />
                         <Link to='/home'></Link>
-                        HOME
+                        Upload Question
                     </Menu.Item>
-                    <Menu.Item key="/menu">
+                    <Menu.Item key="/answer">
                         <AppstoreOutlined />
-                        SERVICE MENU
-                        <Link to='/menu'></Link>
-                    </Menu.Item>
-                    <Menu.Item key="/record">
-                        <TeamOutlined />
-                        CURRENT SERVICE
-                        <Link to='/record'></Link>
-                    </Menu.Item>
-                    <Menu.Item key="/history">
-                        <HistoryOutlined />
-                        HISTORY SERVICE
-                        <Link to='/history'></Link>
-                    </Menu.Item>
-                    <Menu.Item key="/user">
-                        <UserOutlined />
-                        USER INFORMATION
-                        <Link to='/user'></Link>
+                        Answer Question
+                        <Link to='/answer'></Link>
                     </Menu.Item>
                 </Menu>
             </Sider>
