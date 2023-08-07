@@ -100,6 +100,21 @@ class LeftNav extends Component {
                         Answer Question
                         <Link to='/answer'></Link>
                     </Menu.Item>
+                    <Menu.Item key="/drag">
+                        <AppstoreOutlined />
+                        Drag Question
+                        <Link to='/drag'></Link>
+                    </Menu.Item>
+                    <Menu.Item key="/dragexample">
+                        <AppstoreOutlined />
+                        Drag Example
+                        <Link to='/dragexample'></Link>
+                    </Menu.Item>
+                    <Menu.Item key="/answerexample">
+                        <AppstoreOutlined />
+                        Answer Example
+                        <Link to='/answerexample'></Link>
+                    </Menu.Item>
                 </Menu>
             </Sider>
 

@@ -63,7 +63,7 @@ class MHeader extends Component {
         storageUtils.removeUser();
         // memoryUtils.user = {};
         // this.props.removeUser();
-        this.props.history.replace('/home');
+        this.props.history.replace('/login');
       },
       onCancel() {
         console.log('Cancel');
@@ -102,11 +102,11 @@ class MHeader extends Component {
     return (
       <Header style={{ background: '#fff', padding: 0 }}>
         <div className="header">
-          <h2 className='header-title'>{this.getTitle()}</h2>
+          <h2 className='header-title'></h2>
           <div className="header-user">
 
             <div className='userInfo'>
-              wellcome，{user.username}
+              welcome，{user.username}
               <Button onClick={this.logout}>log out</Button>
 
             </div>

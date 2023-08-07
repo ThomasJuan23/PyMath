@@ -6,6 +6,7 @@ import { Button, Checkbox, Form, Input, message } from 'antd';//从antd上直接
 import { reqLogin_email, reqLogin_username } from '../../api';
 import storageUtils from '../../utils/storageUtils';
 import { useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Tabs } from 'antd';
 
 
@@ -204,7 +205,7 @@ const App = () => {
                   <Button type="primary" htmlType="submit" className="login-form-button">
                     Log in
                   </Button>
-                  Or   <a href="/register">register now!</a>
+                  Or   <Link to="/register">register now!</Link>
                 </Form.Item>
               </Form>
             },

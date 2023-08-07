@@ -89,7 +89,7 @@ componentDidMount() {
     return (
       <Header style={{ background: '#fff', padding: 0 }}>
         <div className="header">
-          <h2 className='header-title'>{this.getTitle()}</h2>
+          <h2 className='header-title'>nssadsadasope</h2>
           <div className="header-user">
 
             <div className='userInfo'>

@@ -102,7 +102,7 @@ const handleFormSubmit = async (event) => {
             width="100%"
             height="300px"
             language="python"
-            theme="vs-dark"
+            theme="hc-black"
             value={code}
             onChange={(value) => {
               setCode(value);

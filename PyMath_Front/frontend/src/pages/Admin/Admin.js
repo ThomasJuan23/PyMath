@@ -15,6 +15,10 @@ import MHeader from '../../components/HeadNav/index';
 import LeftNav from './../../components/LeftNav/index';
 import Home from '../Home/home';
 import Answer from '../AnswerQuestion/home';
+import Drag from '../DragAnswer/home';
+import DragExample from '../DragExample/home'
+import AnswerExample from '../AnswerExample/home'
+
 
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -55,6 +59,9 @@ const App = () => {
         <Switch>
             <Route path='/home' component={Home}></Route>
             <Route path='/answer' component={Answer}></Route>
+            <Route path='/drag' component={Drag}></Route>
+            <Route path='/dragexample' component={DragExample}></Route>
+            <Route path='/answerexample' component={AnswerExample}></Route>
             <Redirect to='/home' />
         </Switch>
         </Content>
