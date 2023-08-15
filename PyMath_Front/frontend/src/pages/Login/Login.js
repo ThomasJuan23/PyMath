@@ -5,7 +5,7 @@ import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Checkbox, Form, Input, message } from 'antd';//从antd上直接拿组件，注意看依赖v4和之前的极其不兼容，网上教程都是v3
 import { reqLogin_email, reqLogin_username } from '../../api';
 import storageUtils from '../../utils/storageUtils';
-import { useHistory } from 'react-router-dom';
+import { useHistory} from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Tabs } from 'antd';
 
@@ -196,9 +196,9 @@ const App = () => {
                     <Checkbox>Remember me</Checkbox>
                   </Form.Item>
 
-                  <a className="login-form-forgot" href="">
+                  <Link className="login-form-forgot" to="/reset">
                     Forgot password
-                  </a>
+                  </Link>
                 </Form.Item>
 
                 <Form.Item>

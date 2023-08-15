@@ -11,8 +11,8 @@ import {
 import { Breadcrumb, Layout, Menu, useLocation } from 'antd';
 import React, { useState } from 'react';
 import Logo from '../../assets/images/logo192.png';
-import MHeader from '../../components/AdminHead/index';
-import LeftNav from './../../components/AdminLeft/index';
+import MHeader from '../../components/HeadNav/index';
+import LeftNav from './../../components/LeftNav/index';
 import Home from '../Home/home';
 import Detail from '../QuestionDetail/home'
 import Answer from '../AnswerQuestion/home';
@@ -24,9 +24,8 @@ import Teacher from '../TeacherHome/home'
 import Upload from '../UploadQuestion/home';
 import Admin from '../AdminHome/home'
 import AddAnswer from '../AddAnswer/home'
-import usermanage from '../UserManage/home'
-import AdminMessage from '../Message/message'
-import chat from '../Chat/home'
+import UserProfile from '../UserProfile/home'
+import chat from '../Chat/Userchat'
 
 
 
@@ -44,6 +43,7 @@ const App = () => {
   // }
 
   return (
+
     <Layout
       style={{
         minHeight: '100vh',
@@ -65,21 +65,20 @@ const App = () => {
           }}
         >
         <Switch>
-            {/* <Route path='/home' component={Home}></Route>
-            <Route path='/answer' component={Answer}></Route>
-            <Route path='/drag' component={Drag}></Route>
-            <Route path='/dragexample' component={DragExample}></Route>
-            <Route path='/answerexample' component={AnswerExample}></Route>
-            <Route path='/userhome' component={User}></Route>
-            <Route path='/teacherhome' component={Teacher}></Route>
+            {/* <Route path='/home' component={Home}></Route> */}
+            <Route path='/useradmin/answer' component={Answer}></Route>
+            <Route path='/useradmin/drag' component={Drag}></Route>
+            <Route path='/useradmin/dragexample' component={DragExample}></Route>
+            <Route path='/useradmin/answerexample' component={AnswerExample}></Route>
+            <Route path='/useradmin/userhome' component={User}></Route>
+            <Route path='/useradmin/userinfo' component={UserProfile}></Route>
+            <Route path='/useradmin/chat' component={chat}></Route>
+            {/* <Route path='/teacherhome' component={Teacher}></Route>
             <Route path='/upload' component={Upload}></Route>
-            <Route path='/detail' component={Detail}></Route> */}
-            <Route path='/admin/adminhome' component={Admin}></Route>
-            <Route path='/admin/addanswer' component={AddAnswer}></Route>
-            <Route path='/admin/usermanage' component={usermanage}></Route>
-            <Route path='/admin/message' component={AdminMessage}></Route>
-            <Route path='/admin/chat' component={chat}></Route>
-            <Redirect to='/admin/adminhome' />
+            <Route path='/detail' component={Detail}></Route>
+            <Route path='/adminhome' component={Admin}></Route>
+            <Route path='/addanswer' component={AddAnswer}></Route> */}
+            <Redirect to='/useradmin/userhome' />
         </Switch>
         </Content>
         <Footer

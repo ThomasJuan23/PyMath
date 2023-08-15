@@ -1,10 +1,15 @@
 import logo from './logo.svg';
 import React, { Component } from 'react'
-import { BrowserRouter  , HashRouter,Switch,Route,Redirect } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Switch, Route, Redirect } from 'react-router-dom'
 import './App.css';
 import Login from './pages/Login/Login';
 import Register from './pages/Reg/Reg';
-import Admin from './pages/Admin/Admin';
+import User from './pages/UserAdmin/Admin'
+import Teacher from './pages/TeacherAdmin/Admin'
+import AdminHome from './pages/Admin/Admin'
+import Home from './pages/Home/home';
+import Reset from './pages/ResestPassword/Reg'
+
 import ReactLive2d from 'react-live2d'
 
 const encouragementMessages = [
@@ -42,23 +47,27 @@ const encouragementMessages2 = [
 function App() {
   return (
     <div>
-     <ReactLive2d
-       width = { 250}
-       height = { 400}
-       ModelList = { ['Mark']}
-       color = "#C8E6FE"
-       TouchDefault = { encouragementMessages2}
-       menuList = {[]}
-     />
-    <BrowserRouter>
+      <ReactLive2d
+        width={250}
+        height={400}
+        ModelList={['Mark']}
+        color="#C8E6FE"
+        TouchDefault={encouragementMessages2}
+        menuList={[]}
+      />
+      <BrowserRouter>
         <Switch>
-          <Route path='/login' component={Login}/>           
-          <Route path='/register' component={Register} /> 
-          <Route path='/' component={Admin}/> 
+          <Route path='/login' component={Login} />
+          <Route path='/register' component={Register} />
+          <Route path='/useradmin' component={User}></Route>
+          <Route path='/teacheradmin' component={Teacher}></Route>
+          <Route path='/admin' component={AdminHome}></Route>
+          <Route path='/reset' component={Reset}></Route>
+          <Route path='/' component={Home} />
         </Switch>
       </BrowserRouter>
 
-      </div>
+    </div>
   );
 }
 

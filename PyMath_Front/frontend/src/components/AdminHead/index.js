@@ -3,8 +3,9 @@ import { withRouter, Link } from "react-router-dom";
 import { Layout, Button, Modal, Badge } from "antd";
 import memoryUtils from '../../utils/memoryUtils';
 import storageUtils from '../../utils/storageUtils';
-import { reqServices, reqSearchServices,reqProviders, reqMyRequest, sendRequest, updateRequest, reqMyMessage } from '../../api';
 import menuList from '../../config/menuConfig';
+import { reqMyMessage } from '../../api/index';
+
 import {
   NotificationOutlined,
   ArrowLeftOutlined
@@ -12,30 +13,54 @@ import {
 import './index.css'
 // 通过connect高级组件 对普通组件进行包装
 import { connect } from "react-redux";
-
 const { Header } = Layout;
 const { confirm } = Modal;
 
 
 class MHeader extends Component {
+  dataPreparation = () => {
+    let user = memoryUtils.user
+    this.userEmail = user.email
+    console.log('发到后端的客户邮箱' + this.userEmail)
+  }
+
+
+  // loadMessage = async () => {
+  //   const email = this.userEmail;
+  //   let result_json
+  //   console.log(email)
+  //   result_json = await reqMyMessage(email);
+  //   console.log("shut up" + result_json.data);
+  //   const result = JSON.parse(result_json.data);
+  //   console.log("shut down" + result.code);
+  //   console.log("看看长度" + this.count);
+  //   if (result.code === 200) {
+  //     console.log("shut down" + result.return_obj);
+  //     this.setState({ count: result.return_obj.length });
+  //     console.log("看看长度" + this.state.count);
+  //   }
+  // }
+
+
+
+
   constructor(props) {
     super(props);
     this.state = {
-      num:"*"
+      num: 5,
+      count:0,
+      
     }
   }
   message = () => {
-    this.setState({ num : 0})
-    this.props.history.replace('/manager/message');
+    this.setState({ count:0 })
+    this.props.history.replace('/admin/message');
   }
   logout = () => {
     confirm({
-      title: 'Log out？',
+      title: '确定要退出登录吗？',
       onOk: () => {
         storageUtils.removeUser();
-        memoryUtils.service = {}
-        memoryUtils.request = {}
-        memoryUtils.message = {}
         // memoryUtils.user = {};
         // this.props.removeUser();
         this.props.history.replace('/login');
@@ -54,52 +79,40 @@ class MHeader extends Component {
     menuList.forEach(item => {
       if (item.key === path) {
         title = item.title;
-      } 
+      }
     })
     return title;
 
   }
-  getService = async () => {
-
-    let result = await reqMyMessage(storageUtils.getUser().email);
-  //  const response = JSON.stringify(result.data);
-    const user = JSON.parse(result.data)
-    user.return_obj = user.return_obj.filter(item => item.status === 'new account' || item.status === 'new service'|| item.status === 'updated account');
-    this.setState({num:user.return_obj.length})
-    console.log("雪豹" + user.return_obj.length);
-    // if (result.code === '100') {
-    //     const { providerList, total } = result.obj;
-    //     this.setState({
-    //         provider: providerList,
-    //         total:total
-    //     })
-    // }
-}
-
-componentDidMount() {
-    this.getService();
-}
+  load = () => {
+    this.state.num = 5
+  }
+  componentDidMount() {
+    this.load()
+    this.dataPreparation();
+   // this.loadMessage();
+  }
 
   render() {
-    const user = storageUtils.getUser()
-    const { num } = this.state;
+    const user = "sfsd";
+    const { num , count } = this.state;
     // const user = this.props.user;
     console.log(user.username + '123');
     console.log(this.props);
     return (
       <Header style={{ background: '#fff', padding: 0 }}>
         <div className="header">
-          <h2 className='header-title'>nssadsadasope</h2>
+          <h2 className='header-title'></h2>
           <div className="header-user">
 
             <div className='userInfo'>
-              wellcome，{user.username}
+              welcome，{user.username}
               <Button onClick={this.logout}>log out</Button>
 
             </div>
             <div className='infoButton'>
               <Badge
-                count= {this.state.num} 
+                count={count}
                 size="small">
                 <Button
                   icon={<NotificationOutlined />}
@@ -107,7 +120,7 @@ componentDidMount() {
                   size='medium'
                   onClick={this.message}
                 >
-                {/* <Link to='/message'></Link> */}
+                  <Link to='/admin/message'></Link>
                 </Button>
               </Badge>
             </div>

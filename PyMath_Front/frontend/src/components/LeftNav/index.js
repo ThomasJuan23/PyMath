@@ -90,30 +90,15 @@ class LeftNav extends Component {
                     defaultSelectedKeys={defaultkey}
                     mode="inline"
                 >
-                    <Menu.Item key="/home">
+                    <Menu.Item key="/useradmin/userhome">
                         <DesktopOutlined />
-                        <Link to='/home'></Link>
-                        Upload Question
+                        <Link to='/useradmin/userhome'></Link>
+                        Question List
                     </Menu.Item>
-                    <Menu.Item key="/answer">
+                    <Menu.Item key="/useradmin/userinfo">
                         <AppstoreOutlined />
-                        Answer Question
+                        Personal Profile
                         <Link to='/answer'></Link>
-                    </Menu.Item>
-                    <Menu.Item key="/drag">
-                        <AppstoreOutlined />
-                        Drag Question
-                        <Link to='/drag'></Link>
-                    </Menu.Item>
-                    <Menu.Item key="/dragexample">
-                        <AppstoreOutlined />
-                        Drag Example
-                        <Link to='/dragexample'></Link>
-                    </Menu.Item>
-                    <Menu.Item key="/answerexample">
-                        <AppstoreOutlined />
-                        Answer Example
-                        <Link to='/answerexample'></Link>
                     </Menu.Item>
                 </Menu>
             </Sider>

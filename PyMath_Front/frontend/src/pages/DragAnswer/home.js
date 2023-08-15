@@ -9,6 +9,7 @@ import m2 from '../../assets/images/mouse2.cur';
 import m3 from '../../assets/images/mouse3.cur';
 import m4 from '../../assets/images/mouse4.cur';
 import m5 from '../../assets/images/mouse5.cur';
+import { useHistory } from 'react-router-dom';
 
 const reorder = (list, startIndex, endIndex) => {
     const result = Array.from(list);
@@ -24,12 +25,13 @@ const cursorOptions = [
     { label: 'Monster', value: m5 },
   ];
 
-const initialItems = ['applePrice = 1 ;', 'bananaPrice;', 'print("the total price is "+ applePrice + bananaPrice)'].map((item, index) => ({
+const initialItems = ['applePrice = 1 ;', 'bananaPrice = 10086;', 'print("the total price is "+ applePrice + bananaPrice)'].map((item, index) => ({
   id: `item-${index}`,
   content: item,
 }));
 
 const Home = () => {
+  const history = useHistory();
   const [items, setItems] = useState(initialItems);
   const [output, setOutput] = useState('');
   const [cursor, setCursor] = useState(cursorOptions[0].value);
@@ -130,7 +132,23 @@ const Home = () => {
 
 
   return (
-    <div className="container">
+    <div className="container" style={{ position: 'relative' }}>
+    <button 
+         onClick={() => history.replace('/useradmin/answerexample')}
+         style={{
+             position: 'absolute',
+             top: '10px',
+             right: '10px',
+             backgroundColor: 'lightblue',
+             border: 'none',
+             borderRadius: '5px',
+             padding: '10px 15px',
+             cursor: 'pointer',
+             zIndex: 10001 // 确保它在Joyride覆盖层的上方
+         }}
+     >
+         Next
+     </button>
       <h1>My Answer</h1>
   
       <Form onFinish={handleFormSubmit} style={{ width: '400px', margin: '0 auto' }}>

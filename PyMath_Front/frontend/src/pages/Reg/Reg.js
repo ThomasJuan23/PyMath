@@ -70,30 +70,30 @@ const App = () => {
   const [form] = Form.useForm();
   const [showDescription, setShowDescription] = useState(false);
   const formRef = useRef();
-const [verificationCode, setVerificationCode] = useState(null);
-const sendEmail = () => {
-  const email = formRef.current.getFieldValue("email");
-  const username = formRef.current.getFieldValue("username");
-  const code = Math.floor(100000 + Math.random() * 900000);
-  setVerificationCode(code);
-  console.log(code)
-  const params = {
-    email : email,
-    username : username,
-    code : code
+  const [verificationCode, setVerificationCode] = useState(null);
+  const sendEmail = () => {
+    const email = formRef.current.getFieldValue("email");
+    const username = formRef.current.getFieldValue("username");
+    const code = Math.floor(100000 + Math.random() * 900000);
+    setVerificationCode(code);
+    console.log(code)
+    const params = {
+      email: email,
+      username: username,
+      code: code
+    }
+    emailjs
+      .send('service_r5sgj3i', "template_qvv579v", params, "srp7GX-kcLCEPBT3R")
+      .then(
+        result => {
+          console.log(result.text)
+        },
+        error => {
+          console.log(error.text)
+          alert(error.text)
+        }
+      )
   }
-  emailjs
-    .send('service_r5sgj3i', "template_qvv579v", params, "srp7GX-kcLCEPBT3R")
-    .then(
-      result => {
-        console.log(result.text)
-      },
-      error => {
-        console.log(error.text)
-        alert(error.text)
-      }
-    )
-}
   const onFinish = async (values) => {
     console.log('Received values of form: ', values);
     const { email, username, role, password, confirm, description, address, postcode } = values;
@@ -240,6 +240,29 @@ const sendEmail = () => {
             <Input />
           </Form.Item>
           <Form.Item
+            name="birthday"
+            label="Birthday"
+            tooltip="dd/mm/yyyy"
+            rules={[
+              {
+                required: true,
+                message: 'Please input your birthday!',
+                whitespace: true,
+              },
+              {
+                validator: (_, value) => {
+                  const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+                  if (regex.test(value)) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Date format must be dd/mm/yyyy!'));
+                },
+              },
+            ]}
+          >
+            <Input placeholder="dd/mm/yyyy" />
+          </Form.Item>
+          <Form.Item
             label="Email verification code"
             {...formItemLayout}
           >
@@ -267,16 +290,16 @@ const sendEmail = () => {
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Button 
-                style={{
-                  backgroundColor:'white',
-                  color : 'black',
-                  margin : 5,
-                  border: '1px solid red',
-                  borderColor: 'black',
-                }}
-                onClick={sendEmail}
-                type="primary" htmlType="button">Send</Button>
+                <Button
+                  style={{
+                    backgroundColor: 'white',
+                    color: 'black',
+                    margin: 5,
+                    border: '1px solid red',
+                    borderColor: 'black',
+                  }}
+                  onClick={sendEmail}
+                  type="primary" htmlType="button">Send</Button>
               </Col>
             </Row>
           </Form.Item>
@@ -300,6 +323,36 @@ const sendEmail = () => {
               ]}
               onChange={handleRoleChange}
             />
+          </Form.Item>
+
+          <Form.Item
+            name="safeQuestion"
+            label="Safe Question"
+            tooltip="This is used to find your password back"
+            rules={[
+              {
+                required: true,
+                message: 'Please input an easy question that you have special answer',
+                whitespace: true,
+              },
+            ]}
+          >
+            <Input placeholder='Please input an easy question that you have special answer'/>
+          </Form.Item>
+
+          <Form.Item
+            name="safeAnswer"
+            label="Safe Answer"
+            tooltip="This is used to find you password back"
+            rules={[
+              {
+                required: true,
+                message: 'Please enter your special answer',
+                whitespace: true,
+              },
+            ]}
+          >
+            <Input placeholder='Please enter your special answer' />
           </Form.Item>
 
           <Form.Item

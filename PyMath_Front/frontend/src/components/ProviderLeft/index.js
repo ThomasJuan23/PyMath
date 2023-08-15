@@ -90,25 +90,15 @@ class LeftNav extends Component {
                     defaultSelectedKeys={defaultkey}
                     mode="inline"
                 >
-                    <Menu.Item key="/provider/providerhome">
-                        <DesktopOutlined />
-                        <Link to='/provider/providerhome'></Link>
-                        HOME
-                    </Menu.Item>
-                    <Menu.Item key="/provider/servicelist">
+                    <Menu.Item key="/teacheradmin/teacherhome">
                         <AppstoreOutlined />
-                        SERVICE MENU
-                        <Link to='/provider/servicelist'></Link>
+                        Question List
+                        <Link to='/teacheradmin/teacherhome'></Link>
                     </Menu.Item>
-                    <Menu.Item key="/provider/servicerequest">
+                    <Menu.Item key="/teacheradmin/teacherinfo">
                         <TeamOutlined />
-                        Request SERVICE
-                        <Link to='/provider/servicerequest'></Link>
-                    </Menu.Item>
-                    <Menu.Item key="/provider/servicefinish">
-                        <TeamOutlined />
-                        Finish SERVICE
-                        <Link to='/provider/servicefinish'></Link>
+                        Personal Profile
+                        <Link to='/teacheradmin/teacherinfo'></Link>
                     </Menu.Item>
                 </Menu>
             </Sider>

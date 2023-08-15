@@ -10,6 +10,8 @@ import m2 from '../../assets/images/mouse2.cur';
 import m3 from '../../assets/images/mouse3.cur';
 import m4 from '../../assets/images/mouse4.cur';
 import m5 from '../../assets/images/mouse5.cur';
+import { useHistory } from 'react-router-dom';
+
 
 const reorder = (list, startIndex, endIndex) => {
     const result = Array.from(list);
@@ -56,6 +58,7 @@ const initialStepsPart2 = [
 ];
 
 const Home = () => {
+  const history = useHistory();
   const [items, setItems] = useState(initialItems);
   const [output, setOutput] = useState('');
   const [cursor, setCursor] = useState(cursorOptions[0].value);
@@ -198,7 +201,23 @@ const Home = () => {
 
 
   return (
-    <div className="container">
+    <div className="container" style={{ position: 'relative' }}>
+       <button 
+            onClick={() => history.replace('/useradmin/drag')}
+            style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                backgroundColor: 'lightblue',
+                border: 'none',
+                borderRadius: '5px',
+                padding: '10px 15px',
+                cursor: 'pointer',
+                zIndex: 10001 // 确保它在Joyride覆盖层的上方
+            }}
+        >
+            Next
+        </button>
       <Joyride
         callback={handleJoyrideCallback}
         continuous={true}

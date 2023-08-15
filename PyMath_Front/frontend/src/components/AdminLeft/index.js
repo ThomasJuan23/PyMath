@@ -6,6 +6,8 @@ import {
     PieChartOutlined,
     TeamOutlined,
     UserOutlined,
+    HistoryOutlined,
+    AppstoreOutlined
 } from '@ant-design/icons';
 import Logo from '../../assets/images/logo192.png';
 import { Breadcrumb, Layout, Menu } from 'antd';
@@ -77,36 +79,26 @@ class LeftNav extends Component {
         return (
             <Sider trigger={null} collapsible collapsed={this.props.collapsed}>
                 <div className="logo">
-                    <Link className='left-nav-link' to='/managerhome'>
+                    <Link className='left-nav-link' to='/admin/adminhome'>
                         <img src={Logo} alt="" />
-                        <h1>find a service</h1>
+                        <h1>PyMath</h1>
                     </Link>
                 </div>
 
                 <Menu
                     theme="dark"
                     defaultSelectedKeys={defaultkey}
-                    mode="inline" 
+                    mode="inline"
                 >
-                    <Menu.Item key="/manager/managerhome">
+                    <Menu.Item key="/admin/adminhome">
                         <DesktopOutlined />
-                        <Link to='/manager/managerhome'></Link>
-                        HOME
+                        <Link to='/admin/adminhome'></Link>
+                        Question Management
                     </Menu.Item>
-                    <Menu.Item key="/manager/service">
-                    <FileOutlined/>
-                        Service menu
-                        <Link to='/manager/service'></Link>
-                    </Menu.Item>
-                    <Menu.Item key="/manager/provider">
-                    <TeamOutlined />
-                        New Service Provider
-                        <Link to='/manager/provider'></Link>
-                    </Menu.Item>
-                    <Menu.Item key="/manager/providermanage">
-                    <TeamOutlined />
-                        Provider Management
-                        <Link to='/manager/providermanage'></Link>
+                    <Menu.Item key="/admin/usermanage">
+                        <AppstoreOutlined />
+                        User Management
+                        <Link to='/admin/usermanage'></Link>
                     </Menu.Item>
                 </Menu>
             </Sider>

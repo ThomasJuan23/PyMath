@@ -3,41 +3,19 @@ import { Breadcrumb, Layout, Menu, Button, Form } from 'antd';
 import MonacoEditor from 'react-monaco-editor';
 import axios from 'axios';
 import { Base64 } from 'js-base64';
-import Joyride, { STATUS, ACTIONS, EVENTS } from 'react-joyride';
-import { useHistory } from 'react-router-dom';
+
+const buttonStyle = {
+  backgroundColor: 'white', 
+  color: '#60A3D9',
+  borderColor: '#B2DFEE',
+  marginRight: '10px' // 为了区分两个按钮
+};
+
 
 const Home = () => {
-  const history = useHistory();
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
-  const [run, setRun] = useState(true);
-  const [steps, setSteps] = useState([
-    {
-      target: '.question-item',
-      content: 'This is where the question is presented. Read it carefully.',
-    },
-    {
-      target: '.answer-item',
-      content: 'You need to input your Python code here directly. This is a powerful online compiler, which is consistent with the built-in compiler of visual code ',
-    },
-    {
-      target: '.submit-item',
-      content: 'Click here to submit your answer.',
-    },
-    {
-      target: '.output-item',
-      content: 'This is where the output will be displayed.',
-    },
-  ]);
-
-  const handleJoyrideCallback = (data) => {
-    const { status } = data;
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      // 点击 "Skip" 或 "Done" 时，需要结束教程
-      setRun(false);
-    }
-  };
-
+  const [codeLines, setCodeLines] = useState([]);
 const handleFormSubmit = async (event) => {
   try {
     const encodedCode = Base64.encode(code);
@@ -108,6 +86,8 @@ const handleFormSubmit = async (event) => {
     console.error(error);
     setOutput('Failed to execute Python code.');
   }
+  const lines = code.split('\n').filter(line => line.trim() !== '');  // 这也会过滤掉任何空行
+    setCodeLines(lines);
 };
 
   
@@ -120,49 +100,15 @@ const handleFormSubmit = async (event) => {
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
-      alignItems: 'center',
-      position:'relative'
+      alignItems: 'center'
     }}>
-    <button 
-         onClick={() => history.replace('/useradmin/answer')}
-         style={{
-             position: 'absolute',
-             top: '10px',
-             right: '10px',
-             backgroundColor: 'lightblue',
-             border: 'none',
-             borderRadius: '5px',
-             padding: '10px 15px',
-             cursor: 'pointer',
-             zIndex: 10001 // 确保它在Joyride覆盖层的上方
-         }}
-     >
-         Next
-     </button>
-      <Joyride
-        callback={handleJoyrideCallback}
-        continuous={true}
-        run={run}
-        scrollToFirstStep={true}
-        showProgress={true}
-        showSkipButton={true}
-        steps={steps}
-        styles={{
-          options: {
-            // you can customize the colors
-            primaryColor: '#AE32F5',
-            zIndex: 10000,
-          }
-        }}
-      />
-
       <h1>My Answer</h1>
 
       <Form onFinish={handleFormSubmit} style={{ width: '400px' }}>
-        <Form.Item label="Question" className='question-item'>
+        <Form.Item label="Question">
           <div style={{ marginBottom: '10px' }}>Example Question: example1</div>
         </Form.Item>
-        <Form.Item label="Answer" className='answer-item'>
+        <Form.Item label="Answer">
           <MonacoEditor
             width="100%"
             height="300px"
@@ -175,14 +121,22 @@ const handleFormSubmit = async (event) => {
           />
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit" className='submit-item'>Submit</Button>
-        </Form.Item>
+  <div style={{ display: 'flex', justifyContent: 'center' }}>
+    <Button style={buttonStyle} htmlType="submit">Test</Button>
+    <Button style={{ ...buttonStyle, marginRight: 0 }}>Save Answer</Button>
+  </div>
+</Form.Item>
+
+
+
       </Form>
 
       <div style={{ display: 'flex', alignItems: 'center' }}>
     <h3 style={{ marginRight: '10px', fontSize: '16px' }}>Output:</h3>
     <pre style={{ whiteSpace: 'nowrap', overflow: 'auto', margin: 0, fontSize: '16px' }}>{output}</pre>
 </div>
+
+
     </div>
   );
 }
