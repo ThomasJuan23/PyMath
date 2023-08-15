@@ -2,12 +2,15 @@ package com.example.pymath1.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.pymath1.entity.Message;
 import com.example.pymath1.entity.User;
 import com.example.pymath1.service.IdGeneratorService;
 import com.example.pymath1.service.MessageService;
 import com.example.pymath1.service.UserService;
 import com.example.pymath1.result.Result;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -154,19 +157,35 @@ public class MessageController {
         }
     }
 
+    @Data
+    public class PagedResponse<T> {
+        private long total;
+        private long size;
+        private long current;
+        private List<OrderItem> orders; // 根据您的需求定义Order
+        private boolean hitCount;
+        private boolean searchCount;
+        private long pages;
+        private List<T> records;
+
+        // Getter 和 Setter 省略
+    }
 
     @GetMapping("/getMessageByReceiver")
-    public Result getMessageByReceiver(@RequestParam String email) {
+    public Result<PagedResponse<Message>> getMessageByReceiver(@RequestParam long current, @RequestParam String email) {
         // 首先，得到每个thread_Id的最新的change_Time
-        List<Map<String, Object>> latestChanges = messageService.listMaps(new QueryWrapper<Message>()
+        Page<Map<String, Object>> page = new Page<>(current,10);
+        Page<Map<String, Object>> latestChanges = messageService.pageMaps(page,new QueryWrapper<Message>()
                 .select("thread_Id", "MAX(change_Time) as latestChangeTime")
                 .eq("receiver", email)
                 .groupBy("thread_Id")
                 .orderByDesc("latestChangeTime"));
 
+        List<Map<String, Object>> changesList = latestChanges.getRecords();
+
         // 然后，利用上面得到的信息，查询具体的消息
         List<Message> messages = new ArrayList<>();
-        for (Map<String, Object> change : latestChanges) {
+        for (Map<String, Object> change : changesList) {
             Message message = messageService.getOne(new QueryWrapper<Message>()
                     .eq("thread_Id", change.get("thread_Id"))
                     .eq("change_Time", change.get("latestChangeTime"))
@@ -176,18 +195,28 @@ public class MessageController {
             }
         }
 
-        return Result.ok(messages);
+        PagedResponse<Message> response = new PagedResponse<>();
+        response.setTotal(latestChanges.getTotal());
+        response.setSize(latestChanges.getSize());
+        response.setCurrent(latestChanges.getCurrent());
+        response.setOrders(latestChanges.getOrders());
+        response.setHitCount(latestChanges.isHitCount());
+        response.setSearchCount(latestChanges.isSearchCount());
+        response.setPages(latestChanges.getPages());
+        response.setRecords(messages);
+
+        return Result.ok(response);
     }
 
 
-
     @GetMapping("/getMessageByThread")
-    public Result getMessagesByThreadId(@RequestParam String threadId) {
+    public Result getMessagesByThreadId(@RequestParam long current, @RequestParam String threadId) {
+        Page<Message> page = new Page<>(current,10);
         QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("thread_Id", threadId);
-        List<Message> messages = messageService.list(queryWrapper);
+        Page<Message> messages = messageService.page(page,queryWrapper);
 
-        if (messages == null || messages.isEmpty()) {
+        if (messages == null) {
             return Result.fail().message("No messages found for the given threadId");
         }
         return Result.ok(messages);

@@ -1,6 +1,7 @@
 package com.example.pymath1.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.pymath1.entity.Question;
 import com.example.pymath1.entity.User;
 import com.example.pymath1.result.Result;
@@ -29,7 +30,7 @@ public class QuestionController {
     @Autowired
     private CodeExecutionService codeExecutionService; // 注入CodeExecutionService
 
-    @PostMapping("/verifyAnswer")
+    @PutMapping("/verifyAnswer")
     public Result verifyAnswer(@RequestParam String code, @RequestParam String questionID) {
         // 1. 通过questionID获取答案
         Question question = getQuestion(questionID);
@@ -154,7 +155,7 @@ public class QuestionController {
     }
 
 
-    @PostMapping("/editAnswer")
+    @PutMapping("/editAnswer")
     public Result editAnswer(
             @RequestParam String questionID,
             @RequestParam(required = false) String answer,
@@ -229,8 +230,8 @@ public class QuestionController {
     }
 
     @GetMapping("/getUserQuestionList")
-    public Result getUserQuestionList(@RequestParam(required = false) String type, @RequestParam String ageGroup) {
-
+    public Result getUserQuestionList(@RequestParam long current, @RequestParam(required = false) String type, @RequestParam String ageGroup) {
+        Page<Question> page = new Page<>(current,10);
         QueryWrapper<Question> questionQuery = new QueryWrapper<>();
         questionQuery.eq("level", "1");  // 查询 level = 1 的问题
         if (type != null && !type.isEmpty()) {
@@ -238,9 +239,9 @@ public class QuestionController {
         }
         questionQuery.eq("Age_Group", ageGroup);  // 根据ageGroup过滤
 
-        List<Question> questions = questionService.list(questionQuery);
+        Page<Question> questions = questionService.page(page,questionQuery);
 
-        if (questions != null && !questions.isEmpty()) {
+        if (questions != null) {
             return Result.ok(questions);
         } else {
             return Result.fail().message("No questions found.");
@@ -266,6 +267,7 @@ public class QuestionController {
 
     @GetMapping("/getQuestions")
     public Result getQuestions(
+            @RequestParam long current,
             @RequestParam(required = false) String questionID,
             @RequestParam(required = false) String questionContent,
             @RequestParam(required = false) String type,
@@ -304,16 +306,18 @@ public class QuestionController {
             questionQuery.eq("Email", email);
         }
 
-        List<Question> questions = questionService.list(questionQuery);
+        Page<Question> page = new Page<>(current,10);
 
-        if (questions != null && !questions.isEmpty()) {
+        Page<Question> questions = questionService.page(page,questionQuery);
+
+        if (questions != null) {
             return Result.ok(questions);
         } else {
             return Result.fail().message("No questions found.");
         }
     }
 
-    @PostMapping("/editQuestion")
+    @PutMapping("/editQuestion")
     public Result editQuestion(
             @RequestParam String email,
             @RequestParam String questionId,

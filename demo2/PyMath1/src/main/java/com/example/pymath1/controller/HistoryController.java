@@ -1,6 +1,7 @@
 package com.example.pymath1.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.pymath1.entity.History;
 import com.example.pymath1.entity.User;
 import com.example.pymath1.result.Result;
@@ -18,10 +19,11 @@ public class HistoryController {
 
 
     @GetMapping("/findAll")
-    public Result findAllUser(@RequestParam String emailAddress){
+    public Result findAllUser(@RequestParam long current, @RequestParam String emailAddress){
+        Page<History> page = new Page<>(current,10);
         QueryWrapper<History> emailQuery = new QueryWrapper<>();
         emailQuery.eq("Email", emailAddress);
-        List<History> list = historyService.list(emailQuery);
+        Page<History> list = historyService.page(page,emailQuery);
         return Result.ok(list);
     }
 

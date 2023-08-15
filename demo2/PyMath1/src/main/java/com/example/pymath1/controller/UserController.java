@@ -1,6 +1,7 @@
 package com.example.pymath1.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.pymath1.entity.User;
 import com.example.pymath1.result.Result;
 import com.example.pymath1.service.EmailService;
@@ -51,7 +52,7 @@ public class UserController {
 //        }
 //    }
 
-    @PostMapping("/send-email")
+    @PutMapping("/send-email")
     public Result sendEmail(@RequestParam String emailAddress, HttpSession session) {
         try {
             // 验证电子邮件是否已存在于数据库中
@@ -74,7 +75,7 @@ public class UserController {
 
 
 
-    @PostMapping("/verify-email")
+    @PutMapping("/verify-email")
     public Result verifyEmail(@RequestParam String emailAddress, @RequestParam String userCaptcha, HttpSession session) {
         String sessionCaptcha = (String) session.getAttribute(emailAddress);
         if (sessionCaptcha != null && sessionCaptcha.equals(userCaptcha)) {
@@ -85,7 +86,7 @@ public class UserController {
     }
 
 
-    @GetMapping("/login")
+    @PutMapping("/login")
     public Result loginUser(@RequestParam String email, @RequestParam String password) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("email", email);
@@ -338,7 +339,8 @@ public class UserController {
 
 
     @GetMapping("/getUserList")
-    public Result getUserList(@RequestParam(required = false) String type,
+    public Result getUserList(@RequestParam long current,
+                              @RequestParam(required = false) String type,
                               @RequestParam(required = false) String username,
                               @RequestParam(required = false) String email,
                               @RequestParam(required = false) String userId) {
@@ -356,8 +358,9 @@ public class UserController {
         if (userId != null) {
             query.like("Id", userId);
         }
-        List<User> users = userService.list(query);
-        if (users != null && !users.isEmpty()) {
+        Page<User> page = new Page<>(current,10);
+        Page<User> users = userService.page(page,query);
+        if (users != null) {
             return Result.ok(users);
         } else {
             return Result.fail().message("No users found matching the criteria.");
