@@ -3,9 +3,11 @@ package com.example.pymath1.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.pymath1.entity.User;
+import com.example.pymath1.entity.Verify;
 import com.example.pymath1.result.Result;
 import com.example.pymath1.service.EmailService;
 import com.example.pymath1.service.UserService;
+import com.example.pymath1.service.VerifyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -33,6 +35,9 @@ public class UserController {
     private UserService userService;
 
     @Autowired
+    private VerifyService  verifyService;
+
+    @Autowired
     private EmailService emailService;
 //
 //    //1.查询用户表所有信息
@@ -53,7 +58,7 @@ public class UserController {
 //    }
 
     @PutMapping("/send-email")
-    public Result sendEmail(@RequestParam String emailAddress, HttpSession session) {
+    public Result sendEmail(@RequestParam String emailAddress) {
         try {
             // 验证电子邮件是否已存在于数据库中
             QueryWrapper<User> emailQuery = new QueryWrapper<>();
@@ -61,12 +66,12 @@ public class UserController {
             if (userService.count(emailQuery) > 0) {
                 return Result.fail().message("Email address already exists.");
             }
-
             String captcha = generateCaptcha();
             emailService.sendSimpleMessage(emailAddress, "Your Verification Code", "Your verification code is: " + captcha);
-
-            session.setAttribute(emailAddress, captcha);
-
+            Verify newVerify = new Verify();
+            newVerify.setEmail(emailAddress);
+            newVerify.setCode(captcha);
+            verifyService.save(newVerify);
             return Result.ok().message("Verification code sent successfully.");
         } catch(Exception e) {
             return Result.fail().message(e.getMessage());
@@ -76,12 +81,22 @@ public class UserController {
 
 
     @PutMapping("/verify-email")
-    public Result verifyEmail(@RequestParam String emailAddress, @RequestParam String userCaptcha, HttpSession session) {
-        String sessionCaptcha = (String) session.getAttribute(emailAddress);
+    public Result verifyEmail(@RequestParam String emailAddress, @RequestParam String userCaptcha) {
+        QueryWrapper<Verify> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("email", emailAddress)
+                .orderByDesc("Create_Time")  // 按 create_time 降序排列
+                .last("LIMIT 1");
+        Verify verify = verifyService.getOne(queryWrapper);
+
+        if (verify == null) {
+            return Result.fail().message("Not Found");
+        }
+
+        String sessionCaptcha = verify.getCode();
         if (sessionCaptcha != null && sessionCaptcha.equals(userCaptcha)) {
             return Result.ok();
         } else {
-            return Result.fail().message("Invalid verification code.");
+            return Result.fail().message("Invalid Code");
         }
     }
 
@@ -139,7 +154,7 @@ public class UserController {
         }
 
         // 验证角色
-        if (!"teacher".equalsIgnoreCase(role) && !"user".equalsIgnoreCase(role)) {
+        if (!"teacher".equalsIgnoreCase(role) && !"student".equalsIgnoreCase(role)&& !"admin".equalsIgnoreCase(role)) {
             return Result.fail().message("Invalid user role.");
         }
 
@@ -241,10 +256,10 @@ public class UserController {
             @RequestParam String email,
             @RequestParam String username,
             @RequestParam String birthday,
-            @RequestParam String ageGroup,
-            @RequestParam String institution,
-            @RequestParam String realName,
-            @RequestParam String idCard) {
+            @RequestParam(required = false) String ageGroup,
+            @RequestParam(required = false) String institution,
+            @RequestParam(required = false) String realName,
+            @RequestParam(required = false) String idCard) {
 
         QueryWrapper<User> emailQuery = new QueryWrapper<>();
         emailQuery.eq("Email", email);
@@ -256,11 +271,18 @@ public class UserController {
         user.setUserName(username);
         LocalDate parsedBirthday = LocalDate.parse(birthday);
         user.setBirthday(parsedBirthday);
-        user.setAgeGroup(ageGroup);
-        user.setInstitution(institution);
-        user.setRealName(realName);
-        user.setSchoolId(idCard);
-
+        if(ageGroup!=null) {
+            user.setAgeGroup(ageGroup);
+        }
+        if(institution!=null) {
+            user.setInstitution(institution);
+        }
+        if(realName!=null) {
+            user.setRealName(realName);
+        }
+        if(idCard!=null) {
+            user.setSchoolId(idCard);
+        }
         if (userService.updateById(user)) {
             return Result.ok().message("User info updated successfully.");
         } else {
@@ -358,7 +380,7 @@ public class UserController {
         if (userId != null) {
             query.like("Id", userId);
         }
-        Page<User> page = new Page<>(current,10);
+        Page<User> page = new Page<>(current,5);
         Page<User> users = userService.page(page,query);
         if (users != null) {
             return Result.ok(users);

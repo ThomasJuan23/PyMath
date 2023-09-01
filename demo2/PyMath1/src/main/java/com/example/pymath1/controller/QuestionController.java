@@ -2,16 +2,27 @@ package com.example.pymath1.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.example.pymath1.entity.Message;
 import com.example.pymath1.entity.Question;
 import com.example.pymath1.entity.User;
 import com.example.pymath1.result.Result;
 import com.example.pymath1.service.CodeExecutionService;
+import com.example.pymath1.service.MessageService;
 import com.example.pymath1.service.QuestionService;
 import com.example.pymath1.service.UserService;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,6 +40,9 @@ public class QuestionController {
 
     @Autowired
     private CodeExecutionService codeExecutionService; // 注入CodeExecutionService
+
+    @Autowired
+    private MessageService messageService;
 
     @PutMapping("/verifyAnswer")
     public Result verifyAnswer(@RequestParam String code, @RequestParam String questionID) {
@@ -56,6 +70,19 @@ public class QuestionController {
             } else {
                 return Result.fail(userOutput).message("Execution is incorrect.");
             }
+
+        } catch (Exception e) {
+            return Result.fail().message("An error occurred during code execution: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/runCode")
+    public Result runAnswer(@RequestParam String code) {
+
+        try {
+            // 2. 执行用户提供的代码
+            String userOutput = codeExecutionService.executeCode(code);
+            return Result.ok(userOutput).message("Execution is correct!");
 
         } catch (Exception e) {
             return Result.fail().message("An error occurred during code execution: " + e.getMessage());
@@ -142,6 +169,67 @@ public class QuestionController {
 
         // 使用MyBatis-Plus的服务来保存问题
         if (questionService.save(newQuestion)) {
+            QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+            userQueryWrapper.eq("Type","admin");
+            List<User> adminList = userService.list(userQueryWrapper);
+            if(adminList.isEmpty()){
+                return Result.fail().message("No admin found to assign the question");
+            }
+            User randomAdmin = adminList.get(new Random().nextInt(adminList.size()));
+            String receiverEmail = randomAdmin.getEmail();
+            QueryWrapper<Question> questionQueryWrapper = new QueryWrapper<>();
+            questionQueryWrapper.eq("Question",question)
+            .eq("Level",level)
+                    .eq("Type", type)
+                    .eq("Age_Group",ageGroup)
+                    .eq("Email",email)
+                    .orderByDesc("Create_Time")
+                    .last("LIMIT 1");
+            Question q = questionService.getOne(questionQueryWrapper);
+            String questionId = q.getId(); // Assuming the Question entity has an ID field
+
+            // 调用submitQuestion逻辑
+            QueryWrapper<User> senderWrapper = new QueryWrapper<>();
+            senderWrapper.eq("Email", email);
+            User sender = userService.getOne(senderWrapper);
+
+            QueryWrapper<User> receiverWrapper = new QueryWrapper<>();
+            receiverWrapper.eq("Email", receiverEmail);
+            User receiver = userService.getOne(receiverWrapper);
+
+            if (sender == null || receiver == null) {
+                return Result.fail().message("Invalid sender or receiver email.");
+            }
+
+            if (!"teacher".equals(sender.getType()) || !"admin".equals(receiver.getType())) {
+                return Result.fail().message("Sender should be a teacher and receiver should be an admin.");
+            }
+
+            QueryWrapper<Message> threadWrapper = new QueryWrapper<>();
+            threadWrapper.eq("Sender", email)
+                    .eq("Receiver", receiverEmail)
+                    .eq("Type", "question")
+                    .orderByDesc("Thread_Id")
+                    .last("LIMIT 1");
+
+            Message lastMessage = messageService.getOne(threadWrapper);
+            String nextThreadId;
+            if (lastMessage == null) {
+                nextThreadId = "1";
+            } else {
+                nextThreadId = String.valueOf(Integer.parseInt(lastMessage.getThreadId()) + 1);
+            }
+
+            Message message = new Message();
+            message.setSender(email);
+            message.setReceiver(receiverEmail);
+            message.setContent("new_question");
+            message.setType("question");
+            message.setQuestionId(questionId);
+            message.setThreadId(nextThreadId);
+
+            messageService.saveOrUpdate(message);
+
             return Result.ok().message("Question added successfully.");
         } else {
             return Result.fail().message("Failed to add question.");
@@ -229,22 +317,182 @@ public class QuestionController {
         }
     }
 
-    @GetMapping("/getUserQuestionList")
-    public Result getUserQuestionList(@RequestParam long current, @RequestParam(required = false) String type, @RequestParam String ageGroup) {
-        Page<Question> page = new Page<>(current,10);
-        QueryWrapper<Question> questionQuery = new QueryWrapper<>();
-        questionQuery.eq("level", "1");  // 查询 level = 1 的问题
-        if (type != null && !type.isEmpty()) {
-            questionQuery.eq("Type", type);  // 如果type有值，根据type过滤
+//    @GetMapping("/getUserQuestionList")
+//    public Result getUserQuestionList(@RequestParam long current, @RequestParam(required = false) String type, @RequestParam String ageGroup, @RequestParam(required = false) String startDate, @RequestParam(required = false) String endDate) {
+//        Page<Question> page = new Page<>(current,5);
+//        QueryWrapper<Question> questionQuery = new QueryWrapper<>();
+//        if(startDate!=null && endDate!=null) {
+//            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd"); // 根据实际日期格式进行调整
+//            try {
+//                Date start = format.parse(startDate);
+//                Date end = format.parse(endDate);
+//                questionQuery.between("change_time", start, end);  // 使用BETWEEN进行时间范围查询
+//            } catch (ParseException e) {
+//                e.printStackTrace();// 可以选择返回一个错误响应，或者继续其他处理
+//            }
+//        }
+//        questionQuery.eq("level", "1");  // 查询 level = 1 的问题
+//        if (type != null && !type.isEmpty()) {
+//            questionQuery.eq("Type", type);  // 如果type有值，根据type过滤
+//        }
+//        questionQuery.eq("Age_Group", ageGroup);  // 根据ageGroup过滤
+//
+//        Page<Question> questions = questionService.page(page,questionQuery);
+//
+//        if (questions != null) {
+//            return Result.ok(questions);
+//        } else {
+//            return Result.fail().message("No questions found.");
+//        }
+//    }
+    @GetMapping("/getTypesByAgeGroup")
+    public Result getTypesByAgeGroup(@RequestParam String AgeGroup,@RequestParam(required = false) String startDate,
+                                     @RequestParam(required = false) String endDate, @RequestParam(required = false) String Type){
+        QueryWrapper<Question> queryWrapper = new QueryWrapper<>();
+        queryWrapper.isNotNull("Answer");
+        queryWrapper.eq("age_Group", AgeGroup);
+        if(startDate!=null && endDate!=null) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd"); // 根据实际日期格式进行调整
+            try {
+                Date start = format.parse(startDate);
+                Date end = format.parse(endDate);
+                queryWrapper.between("change_time", start, end);  // 使用BETWEEN进行时间范围查询
+            } catch (ParseException e) {
+                e.printStackTrace();// 可以选择返回一个错误响应，或者继续其他处理
+            }
         }
-        questionQuery.eq("Age_Group", ageGroup);  // 根据ageGroup过滤
+        queryWrapper.like("Type",Type);
+        List<Question> questions = questionService.list(queryWrapper);
+        if (questions != null && !questions.isEmpty()) {
+            // 使用Java 8的流从问题列表中提取独特的"type"值
+            List<String> uniqueTypes = questions.stream()
+                    .map(Question::getType)
+                    .distinct()
+                    .collect(Collectors.toList());
 
-        Page<Question> questions = questionService.page(page,questionQuery);
-
-        if (questions != null) {
-            return Result.ok(questions);
+            return Result.ok(uniqueTypes);
         } else {
-            return Result.fail().message("No questions found.");
+            return Result.fail().message("No types found.");
+        }
+    }
+
+    @GetMapping("/getBeforeQuestion")
+    public Result getBeforeQuestion(@RequestParam String email, @RequestParam String questionId) {
+        try {
+            QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+            userQueryWrapper.eq("Email", email);
+            userQueryWrapper.last("LIMIT 1");
+            User user = userService.getOne(userQueryWrapper);
+            if (user == null) {
+                return Result.fail().message("User not found");
+            }
+            LocalDate birthDate =user.getBirthday();
+            LocalDate currentDate = LocalDate.now();
+            Period agePeriod = Period.between(birthDate, currentDate);
+            String ageGroup;
+            if (agePeriod.getYears() < 14 || (agePeriod.getYears() == 14 && agePeriod.getMonths() < 6)) {
+                ageGroup = "11-14";  // 14岁以下
+            } else if (agePeriod.getYears() < 16 || (agePeriod.getYears() == 16 && agePeriod.getMonths() < 6)) {
+                ageGroup = "14-16";  // 14到16岁
+            } else {
+                ageGroup = "16-18";  // 16到18岁
+            }
+            Question question = questionService.getById(questionId);
+            if (question == null) {
+                return Result.fail().message("Question not found");
+            }
+            String type = question.getType();
+            String level = question.getLevel();
+            Date changeTime = question.getChangeTime();
+
+            String questionID = "";
+            int i = 0;
+            while (questionID.isEmpty()) {
+                int newLevel = Integer.parseInt(level) - i;
+                if (newLevel <= 0) {
+                    return Result.ok("first one");
+                }
+                QueryWrapper<Question> queryWrapper1 = new QueryWrapper<>();
+                queryWrapper1.isNotNull("Answer");
+                queryWrapper1.eq("Type", type);
+                queryWrapper1.eq("Age_Group", ageGroup);
+                queryWrapper1.eq("Level", String.valueOf(newLevel));
+                if (newLevel == Integer.parseInt(level)) {
+                    queryWrapper1.lt("Change_Time", changeTime);
+                }
+                queryWrapper1.orderByDesc("Change_Time");
+                queryWrapper1.last("LIMIT 1");
+                Question q = questionService.getOne(queryWrapper1);
+                if (q != null) {
+                    questionID = q.getId();
+                }
+                i++;
+            }
+            return Result.ok(questionID);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.fail().message("An error occurred");
+        }
+    }
+
+
+
+    @GetMapping("/getAfterQuestion")
+    public Result getAfterQuestion(@RequestParam String email, @RequestParam String questionId){
+        try {
+            QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+            userQueryWrapper.eq("Email", email);
+            userQueryWrapper.last("LIMIT 1");
+            User user = userService.getOne(userQueryWrapper);
+            if (user == null) {
+                return Result.fail().message("User not found");
+            }
+            LocalDate birthDate =user.getBirthday();
+            LocalDate currentDate = LocalDate.now();
+            Period agePeriod = Period.between(birthDate, currentDate);
+            String ageGroup;
+            if (agePeriod.getYears() < 14 || (agePeriod.getYears() == 14 && agePeriod.getMonths() < 6)) {
+                ageGroup = "11-14";  // 14岁以下
+            } else if (agePeriod.getYears() < 16 || (agePeriod.getYears() == 16 && agePeriod.getMonths() < 6)) {
+                ageGroup = "14-16";  // 14到16岁
+            } else {
+                ageGroup = "16-18";  // 16到18岁
+            }
+            Question question = questionService.getById(questionId);
+            if (question == null) {
+                return Result.fail().message("Question not found");
+            }
+            String type = question.getType();
+            String level = question.getLevel();
+            Date changeTime = question.getChangeTime();
+
+            String questionID = "";
+            int i = 0;
+            while (questionID.isEmpty()) {
+                int newLevel = Integer.parseInt(level) + i;
+                if (newLevel > 4) {
+                    return Result.ok("last one");
+                }
+                QueryWrapper<Question> queryWrapper1 = new QueryWrapper<>();
+                queryWrapper1.isNotNull("Answer");
+                queryWrapper1.eq("Type", type);
+                queryWrapper1.eq("Age_Group", ageGroup);
+                queryWrapper1.eq("Level", String.valueOf(newLevel));
+                if (newLevel == Integer.parseInt(level)) {
+                    queryWrapper1.gt("Change_Time", changeTime);
+                }
+                queryWrapper1.orderByAsc("Change_Time");
+                queryWrapper1.last("LIMIT 1");
+                Question q = questionService.getOne(queryWrapper1);
+                if (q != null) {
+                    questionID = q.getId();
+                }
+                i++;
+            }
+            return Result.ok(questionID);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.fail().message("An error occurred");
         }
     }
 
@@ -273,10 +521,23 @@ public class QuestionController {
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String ageGroup,
             @RequestParam(required = false) Boolean hasAnswer,
-            @RequestParam(required = false) String email) {
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+            ) {
 
         // 使用QueryWrapper构建查询条件
         QueryWrapper<Question> questionQuery = new QueryWrapper<>();
+        if(startDate!=null && endDate!=null) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd"); // 根据实际日期格式进行调整
+            try {
+                Date start = format.parse(startDate);
+                Date end = format.parse(endDate);
+                questionQuery.between("change_time", start, end);  // 使用BETWEEN进行时间范围查询
+            } catch (ParseException e) {
+                e.printStackTrace();// 可以选择返回一个错误响应，或者继续其他处理
+            }
+        }
 
         if (questionID != null && !questionID.trim().isEmpty()) {
             questionQuery.like("Id", questionID);
@@ -306,7 +567,7 @@ public class QuestionController {
             questionQuery.eq("Email", email);
         }
 
-        Page<Question> page = new Page<>(current,10);
+        Page<Question> page = new Page<>(current,5);
 
         Page<Question> questions = questionService.page(page,questionQuery);
 

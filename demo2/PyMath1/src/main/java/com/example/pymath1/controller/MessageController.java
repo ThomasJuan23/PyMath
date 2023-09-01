@@ -12,16 +12,21 @@ import com.example.pymath1.service.UserService;
 import com.example.pymath1.result.Result;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/message")
+@RequestMapping("/public/Message")
 public class MessageController {
+
+    @Autowired
+    private SimpMessagingTemplate simpMessagingTemplate;
 
     @Autowired
     private MessageService messageService;
@@ -84,13 +89,19 @@ public class MessageController {
 
     @PostMapping("/createMessage")
     public Result createMessage(@RequestParam String senderEmail,
-                                @RequestParam String receiverEmail,
                                 @RequestParam String content) {
 
         QueryWrapper<User> senderWrapper = new QueryWrapper<>();
         senderWrapper.eq("Email", senderEmail);
         User sender = userService.getOne(senderWrapper);
-
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.eq("Type","admin");
+        List<User> adminList = userService.list(userQueryWrapper);
+        if(adminList.isEmpty()){
+            return Result.fail().message("No admin found to assign the question");
+        }
+        User randomAdmin = adminList.get(new Random().nextInt(adminList.size()));
+        String receiverEmail = randomAdmin.getEmail();
         QueryWrapper<User> receiverWrapper = new QueryWrapper<>();
         receiverWrapper.eq("Email", receiverEmail);
         User receiver = userService.getOne(receiverWrapper);
@@ -118,7 +129,7 @@ public class MessageController {
 
         messageService.save(message);
 
-        return Result.ok().message("Message successfully created");
+        return Result.ok(threadId).message("Message successfully created");
     }
 
     @PostMapping("/replyMessage")
@@ -150,8 +161,19 @@ public class MessageController {
         message.setThreadId(threadId);
 
         boolean isSaved = messageService.save(message);
+        QueryWrapper<Message> messageQueryWrapper = new QueryWrapper<>();
+        messageQueryWrapper.eq("Sender", sender)
+                .eq("Receiver",receiver)
+                .eq("Content",content)
+                .eq("Type","reply message")
+                .eq("Thread_Id",threadId)
+                .orderByDesc("Create_Time")
+                .last("LIMIT 1");
+        Message message1 = messageService.getOne(messageQueryWrapper);
         if (isSaved) {
-            return Result.ok().message("Message replied successfully.");
+            System.out.println(receiver);
+            simpMessagingTemplate.convertAndSend("/topic/replies", message1);
+            return Result.ok(message1.getCreateTime()).message("Message replied successfully.");
         } else {
             return Result.fail().message("Failed to reply the message.");
         }
@@ -174,7 +196,7 @@ public class MessageController {
     @GetMapping("/getMessageByReceiver")
     public Result<PagedResponse<Message>> getMessageByReceiver(@RequestParam long current, @RequestParam String email) {
         // 首先，得到每个thread_Id的最新的change_Time
-        Page<Map<String, Object>> page = new Page<>(current,10);
+        Page<Map<String, Object>> page = new Page<>(current,5);
         Page<Map<String, Object>> latestChanges = messageService.pageMaps(page,new QueryWrapper<Message>()
                 .select("thread_Id", "MAX(change_Time) as latestChangeTime")
                 .eq("receiver", email)
@@ -211,9 +233,10 @@ public class MessageController {
 
     @GetMapping("/getMessageByThread")
     public Result getMessagesByThreadId(@RequestParam long current, @RequestParam String threadId) {
-        Page<Message> page = new Page<>(current,10);
+        Page<Message> page = new Page<>(current,5);
         QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("thread_Id", threadId);
+        queryWrapper.orderByAsc("Create_Time");
         Page<Message> messages = messageService.page(page,queryWrapper);
 
         if (messages == null) {

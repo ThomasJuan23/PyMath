@@ -21,6 +21,57 @@ import java.util.List;
 @SpringBootTest
 class PyMath1ApplicationTests {
 //    @Test
+//    public void test(){
+//        int[] burstTime = {4,3,2,2,2,6};
+//        int n = 1, m =1;
+//        while(n<4){
+//            while(m<7){
+//                System.out.println("最小可能的最大负载时间：" + n + m + findMinimumMaxLoad(burstTime, n, m));
+//                m++;
+//            }
+//            m=1;
+//            n++;
+//        }
+//    }
+    private static int calculateLoadTime(int[] burstTime, int start, int end) {
+        int totalLoadTime = 0;
+        for (int i = start; i <= end; i++) {
+            totalLoadTime += burstTime[i];
+        }
+        return totalLoadTime;
+    }
+
+    private static int findMinimumMaxLoad(int[] burstTime, int n, int m) {
+        int[][] dp = new int[n + 1][m + 1]; // dp[i][j]表示将前j个任务分配到i个服务器的最优负载时间
+
+        // 初始化dp数组
+        for (int i = 1; i <= n; i++) {
+            dp[i][1] = burstTime[0];
+        }
+
+        for (int j = 1; j <= m; j++) {
+            dp[1][j] = calculateLoadTime(burstTime, 0, j - 1);
+        }
+
+        // 填充dp数组
+        for (int i = 2; i <= n; i++) {
+            for (int j = 2; j <= m; j++) {
+                int minMaxLoad = Integer.MAX_VALUE;
+
+                for (int k = 1; k <= j; k++) {
+                    int currentMaxLoad = Math.max(dp[i - 1][k], calculateLoadTime(burstTime, k, j - 1));
+                    minMaxLoad = Math.min(minMaxLoad, currentMaxLoad);
+                }
+
+                dp[i][j] = minMaxLoad;
+            }
+        }
+
+        return dp[n][m];
+    }
+
+
+//    @Test
 //    public void decode(){
 //        String a = "VHJhY2ViYWNrIChtb3N0IHJlY2VudCBjYWxsIGxhc3QpOgogIEZpbGUgInNj\n" +
 //                "cmlwdC5weSIsIGxpbmUgMSwgaW4gPG1vZHVsZT4KICAgIGRhc2QKTmFtZUVy\n" +

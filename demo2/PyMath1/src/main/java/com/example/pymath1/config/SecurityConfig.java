@@ -26,7 +26,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/public/**").permitAll()  // 公开访问的端点
+                .antMatchers("/**").permitAll()  // 公开访问的端点
                 .anyRequest().authenticated()          // 其他所有请求都需要身份验证
                 .and()
                 .formLogin()                               // 启用默认的登录表单
