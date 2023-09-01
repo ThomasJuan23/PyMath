@@ -2,10 +2,10 @@ import React, { useState, useRef } from 'react'
 import logo from '../../assets/images/logo192.png'
 import './register.css'
 import emailjs from 'emailjs-com'
+import { reqSendEmail, verifyEmail, registerUser } from '../../api/index';
 
 
 import { useHistory } from 'react-router-dom';
-import { reqServiceRegister, reqRegister, reqProviderRegister, reqAddService } from '../../api';
 import {
   AutoComplete,
   Button,
@@ -71,69 +71,111 @@ const App = () => {
   const [showDescription, setShowDescription] = useState(false);
   const formRef = useRef();
   const [verificationCode, setVerificationCode] = useState(null);
-  const sendEmail = () => {
+  const sendEmail = async () => {
     const email = formRef.current.getFieldValue("email");
     const username = formRef.current.getFieldValue("username");
-    const code = Math.floor(100000 + Math.random() * 900000);
-    setVerificationCode(code);
-    console.log(code)
-    const params = {
-      email: email,
-      username: username,
-      code: code
+  
+    // 1. 检查 email 是否为空
+    if (!email) {
+      message.error("Please enter your email address."); // 使用 antd 的 message 组件显示错误消息
+      return; // 结束函数执行
     }
-    emailjs
-      .send('service_r5sgj3i', "template_qvv579v", params, "srp7GX-kcLCEPBT3R")
-      .then(
-        result => {
-          console.log(result.text)
-        },
-        error => {
-          console.log(error.text)
-          alert(error.text)
-        }
-      )
-  }
-  const onFinish = async (values) => {
-    console.log('Received values of form: ', values);
-    const { email, username, role, password, confirm, description, address, postcode } = values;
-    // history.replace('/login')
-    console.log('Received values of form' + description, address, postcode);
-    console.log(role);
-    if (role == "customer") {
-
-      const res_json = await reqRegister(email, username, role, password, confirm);
-      console.log("芝士" + res_json);
-      const res = JSON.parse(res_json.data);
-
-      if (res.code === 110) {
-        message.success("registers successfully");
-        history.replace('/login')
+  
+    try {
+      // 2. 调用后端 API 接口来发送电子邮件
+      const result = await reqSendEmail(email);
+  
+      // 3. 检查响应码
+      if (result.code !== 200) {
+        message.error(`An error occurred: ${result.message}`); // 反馈给客服
       } else {
-        message.error(res.msg);
+        message.success("Verification email has been sent. If you donot receive your email in 1 min, please check your input"); // 告诉用户验证邮件已发送
       }
-    }
-    else {
-      const res_json = await reqProviderRegister(email, username, role, password, confirm, description, address, postcode);
-      console.log("芝士" + res_json);
-      const res = JSON.parse(res_json.data);
-      console.log(res);
-      if (res.code === 110) {
-        openNotification();
-        sendrequest(email)
-        history.replace('/login')
-      } else {
-        message.error(res.msg);
-
-      }
+    } catch (error) {
+      // 网络错误或其他问题
+      message.error("An unexpected error occurred. Please try again later.");
     }
   };
-  const sendrequest = async (email) => {
-    const res = await reqAddService(email, 'admin@admin.com', null, null, null, 'newaccount')
-  }
+    // if (result && result.success) {
+    // // 这里假设后端返回了一个包含 "success" 字段的对象，您可以根据实际后端响应进行调整
+    //   message.success("Verification email sent successfully");
+    //  } else {
+    //   message.error("Failed to send verification email");
+    //    }
+   //  const email = formRef.current.getFieldValue("email");
+    // const username = formRef.current.getFieldValue("username");
+    // const code = Math.floor(100000 + Math.random() * 900000);
+    // setVerificationCode(code);
+    // console.log(code)
+    // const params = {
+    //   email: email,
+    //   username: username,
+    //   code: code
+    // }
+    // emailjs
+    //   .send('service_r5sgj3i', "template_qvv579v", params, "srp7GX-kcLCEPBT3R")
+    //   .then(
+    //     result => {
+    //       console.log(result.text)
+    //     },
+    //     error => {
+    //       console.log(error.text)
+    //       alert(error.text)
+    //     }
+    //   )
+//  }
+  const onFinish = async (values) => {
+    // console.log('Received values of form: ', values);
+    // const { email, username, role, password, confirm, description, address, postcode } = values;
+    // // history.replace('/login')
+    // console.log('Received values of form' + description, address, postcode);
+    // console.log(role);
+
+    const email = formRef.current.getFieldValue("email");
+    const code = formRef.current.getFieldValue("code");
+  
+    // 1. 检查 email 是否为空
+    if (!code) {
+      message.error("Please enter the verification Code."); // 使用 antd 的 message 组件显示错误消息
+      return; // 结束函数执行
+    }
+  
+    try {
+      // 2. 调用后端 API 接口来发送电子邮件
+      const result = await verifyEmail(email,code);
+      // 3. 检查响应码
+      if (result.code !== 200) {
+        message.error(`An error1111 occurred: ${result.message}`); // 反馈给客服
+      } else {
+        const username = formRef.current.getFieldValue("username");
+        const password = formRef.current.getFieldValue("password");
+        const birthday = formRef.current.getFieldValue("birthday");
+        const age = formRef.current.getFieldValue("age");
+        const sQ= formRef.current.getFieldValue("safeQuestion");
+        const sA = formRef.current.getFieldValue("safeAnswer");
+        const role = formRef.current.getFieldValue("role");
+        const inst = formRef.current.getFieldValue("Institution");
+        const real = formRef.current.getFieldValue("Real");
+        const ID = formRef.current.getFieldValue("ID card");
+        //调用register函数
+        const result2 = await registerUser(email,username,role,password,birthday,age,inst,real,ID,sQ,sA);
+        if(result2.code!=200){
+          message.error(`An error2222 occurred: ${result2.message}`); 
+        }
+        else{
+          message.success("Register Successfully")
+          history.replace('/login')
+        }
+      }
+    } catch (error) {
+      // 网络错误或其他问题
+      message.error("An unexpected error occurred. Please try again later.");
+    }
+  };
+
   const handleRoleChange = (e) => {
     const roleValue = e.target.value;
-    setShowDescription(roleValue === 'serviceProvider');
+    setShowDescription(roleValue === 'teacher');
   };
 
   return (
@@ -150,10 +192,6 @@ const App = () => {
           form={form}
           name="register"
           onFinish={onFinish}
-          // initialValues={{
-          //   residence: ['zhejiang', 'hangzhou', 'xihu'],
-          //   prefix: '86',
-          // }}
           style={{
             maxWidth: 600,
           }}
@@ -242,7 +280,7 @@ const App = () => {
           <Form.Item
             name="birthday"
             label="Birthday"
-            tooltip="dd/mm/yyyy"
+            tooltip="yyyy-mm-dd"
             rules={[
               {
                 required: true,
@@ -251,7 +289,7 @@ const App = () => {
               },
               {
                 validator: (_, value) => {
-                  const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+                  const regex = /^\d{4}-[01][0-9]-[0-3][0-9]$/;
                   if (regex.test(value)) {
                     return Promise.resolve();
                   }
@@ -260,7 +298,7 @@ const App = () => {
               },
             ]}
           >
-            <Input placeholder="dd/mm/yyyy" />
+            <Input placeholder="yyyy-mm-dd" />
           </Form.Item>
           <Form.Item
             label="Email verification code"
@@ -269,21 +307,21 @@ const App = () => {
             <Row gutter={8}>
               <Col span={16}>
                 <Form.Item
-                  name="Email verification code"
-                  rules={[
-                    {
-                      required: true,
-                      message: 'Please input the verification code!',
-                    },
-                    () => ({
-                      validator(_, value) {
-                        if (Number(value) === verificationCode) {
-                          return Promise.resolve();
-                        }
-                        return Promise.reject(new Error('The verification code is not correct!'));
-                      },
-                    }),
-                  ]}
+                  name="code"
+                  // rules={[
+                  //   {
+                  //     required: true,
+                  //     message: 'Please input the verification code!',
+                  //   },
+                  //   () => ({
+                  //     validator(_, value) {
+                  //       if (Number(value) === verificationCode) {
+                  //         return Promise.resolve();
+                  //       }
+                  //       return Promise.reject(new Error('The verification code is not correct!'));
+                  //     },
+                  //   }),
+                  // ]}
                   noStyle
                 >
                   <Input placeholder="Please input the verification code!" />
@@ -316,10 +354,9 @@ const App = () => {
           >
             <Radio.Group
               options={[
-                { label: "11-13", value: "11" },
-                { label: "13-15", value: "13" },
-                { label: "15-17", value: "15" },
-                { label: "17-18", value: "17" }
+                { label: "11-14 (key Stage 3)", value: "11-14" },
+                { label: "14-16 (key Stage 4)", value: "14-16" },
+                { label: "16-18 (key Stage 4+)", value: "16-18" },
               ]}
               onChange={handleRoleChange}
             />
@@ -367,8 +404,8 @@ const App = () => {
           >
             <Radio.Group
               options={[
-                { label: "Student", value: "customer" },
-                { label: "Teacher", value: "serviceProvider" }
+                { label: "Student", value: "student" },
+                { label: "Teacher", value: "teacher" }
               ]}
               onChange={handleRoleChange}
             />

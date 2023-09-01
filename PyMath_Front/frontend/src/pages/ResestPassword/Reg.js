@@ -1,58 +1,65 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import logo from '../../assets/images/logo192.png';
 import { Form, Input, Button, message } from 'antd';
 import './register.css';
-
-const sampleData = [
-  {
-    email: 'user1@example.com',
-    safeQuestion: 'What is your pet\'s name?',
-    safeAnswer: 'Buddy'
-  },
-  {
-    email: 'user2@example.com',
-    safeQuestion: 'What is your mother\'s maiden name?',
-    safeAnswer: 'Smith'
-  }
-];
+import { getSafeQuestion, verifySafeAnswer, changePassword } from '../../api';
 
 const ResetPassword = () => {
   const [form] = Form.useForm();
-  const [safeQuestion, setSafeQuestion] = useState(''); // Assuming you fetch this from the backend based on email
-  const [canReset, setCanReset] = useState(false); // Will determine if user can enter new password
+  const [safeQuestion, setSafeQuestion] = useState('');
+  const [canReset, setCanReset] = useState(false);
 
-  const onEmailChange = (email) => {
-    const user = sampleData.find(user => user.email === email);
-    if (user) {
-      setSafeQuestion(user.safeQuestion);
-    } else {
-      setSafeQuestion(''); // Reset question if email is not found
+  const fetchSafeQuestion = async (email) => {
+    try {
+      const response = await getSafeQuestion(email);
+      if (response.code === 200) {
+        setSafeQuestion(response.data);
+      } else {
+        message.error(response.message);
+      }
+    } catch (error) {
+      message.error('Error fetching safe question.');
     }
   };
-  
 
-  const onAnswerSubmit = (email, answer) => {
-    const user = sampleData.find(user => user.email === email);
-    if (user && user.safeAnswer === answer) {
-      setCanReset(true);
+  const handleFetchQuestionClick = () => {
+    const email = form.getFieldValue('email');
+    if (email) {
+      fetchSafeQuestion(email);
     } else {
-      message.error('Incorrect answer. Please try again.');
+      message.error('Please input your E-mail first!');
     }
   };
-  
 
-  const onFinish = (values) => {
+  const onAnswerSubmit = async (email, answer) => {
+    try {
+      const response = await verifySafeAnswer(email, answer);
+      if (response.code === 200) {
+        setCanReset(true);
+      } else {
+        message.error(response.message);
+      }
+    } catch (error) {
+      message.error('Error verifying answer.');
+    }
+  };
+
+  const onFinish = async (values) => {
     if (canReset) {
-      // Update password in backend
-      // Placeholder:
-      // const result = await updatePassword(values.email, values.newPassword);
-      // For now, let's just show a success message
-      message.success('Password updated successfully!');
+      try {
+        const response = await changePassword(values.email, values.newPassword);
+        if (response.code === 200) {
+          message.success('Password updated successfully!');
+        } else {
+          message.error(response.message);
+        }
+      } catch (error) {
+        message.error('Error updating password.');
+      }
     } else {
-      onAnswerSubmit(values.email, values.answer);
+      await onAnswerSubmit(values.email, values.answer);
     }
   };
-  
 
   return (
     <div className='register'>
@@ -81,7 +88,6 @@ const ResetPassword = () => {
                 message: 'The input is not valid E-mail!',
               }
             ]}
-            onChange={(e) => onEmailChange(e.target.value)}
           >
             <Input />
           </Form.Item>
@@ -112,7 +118,7 @@ const ResetPassword = () => {
                     message: 'Please input your new password!',
                   },
                   {
-                    pattern: new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})'),
+                    pattern: new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\\$%\\^&\\*])(?=.{8,})'),
                     message: 'Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character.',
                   }
                 ]}
@@ -146,11 +152,26 @@ const ResetPassword = () => {
             </>
           )}
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              {canReset ? 'Update Password' : 'Submit Answer'}
-            </Button>
+          <Form.Item style={{ textAlign: 'center' }}>
+            {!safeQuestion && (
+              <Button type="primary" onClick={handleFetchQuestionClick}>
+                Fetch Safe Question
+              </Button>
+            )}
+
+            {safeQuestion && !canReset && (
+              <Button type="primary" htmlType="submit">
+                Submit Answer
+              </Button>
+            )}
+
+            {canReset && (
+              <Button type="primary" htmlType="submit">
+                Update Password
+              </Button>
+            )}
           </Form.Item>
+
         </Form>
       </div>
     </div>

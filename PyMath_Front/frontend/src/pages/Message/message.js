@@ -1,106 +1,102 @@
-import React, { Component } from 'react'
-import { Avatar, List, Card, Button, Collapse } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Avatar, List, Card, Button, Collapse, Pagination } from 'antd';
 import memoryUtils from '../../utils/memoryUtils';
+import { getMessageByReceiver } from '../../api'; // Import the API function for getting messages
+import storageUtils from '../../utils/storageUtils';
 
 const { Panel } = Collapse;
 
-// 样本数据
-const sampleMessages = [
-  {
-    _id: "1",
-    sender: "John Doe",
-    service: { name: "Service 1" },
-    status: "further details requested",
-    receiver: "User A",
-    content: "Your order has been completed."
-  },
-  {
-    _id: "2",
-    sender: "Jane Smith",
-    service: { name: "Service 2" },
-    status: "In Progress",
-    receiver: "User B",
-    content: "Your order is in progress."
-  }
-  // ...其他样本数据项
-];
+const Message = ({ history }) => {
+  const [messages, setMessages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
-export default class Message extends Component {
-
-    state = {
-        messages: sampleMessages
-    }
-
-    disabled(request) {
-        if (request.status === 'further details requested') {
-            return false
-        } else {
-            return true
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await getMessageByReceiver(currentPage, storageUtils.getUser());
+        if (result.code === 200) {
+          setMessages(result.data.records);
         }
-    }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    };
 
-    render() {
-        const { messages } = this.state;
+    fetchData();
+  }, [currentPage]);
 
-        return (
-            <Card>
-                <List
-                    itemLayout="horizontal"
-                    dataSource={messages}
-                    pagination={{
-                        defaultPageSize: 5,
-                        showQuickJumper: true,
-                    }}
-                    renderItem={(item, index) => (
-                        <List.Item
-                            extra={<Button
-                                disabled={this.disabled(item)}
-                                type='primary'
-                                onClick={() => {
-                                    memoryUtils.request = item;
-                                    this.props.history.push('/admin/chat/' + item._id);
-                                }}
-                            >
-                                Update
-                            </Button>}
-                        >
-                            <List.Item.Meta
-                                avatar={<Avatar src={"https://robohash.org/" + item._id + "?set=set4"} />}
-                                title={item.sender}
-                                description=
-                                {
-                                    <Collapse
-                                        bordered={false}
-                                        ghost={true}
-                                    >
-                                        <p style={{ paddingLeft: 0, }}>
-                                            {item.service.name}
-                                        </p>
-                                        <p style={{ paddingLeft: 0, }}>
-                                            Order number : {item._id}
-                                        </p>
-                                        <p style={{ paddingLeft: 0, }}>
-                                            Hi, your service status has been updated.
-                                        </p>
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
-                                        <Panel
-                                            header={"Current Status :" + item.status}
-                                            key="2"
-                                        >
-                                            <p style={{ paddingLeft: 24, }}>
-                                               Dear  {item.receiver} :
-                                            </p>
-                                            <p style={{ paddingLeft: 24, }}>
-                                                {item.content}
-                                            </p>
-                                        </Panel>
-                                    </Collapse>
-                                }
-                            />
-                        </List.Item>
+  return (
+    <Card>
+      <List
+        itemLayout="horizontal"
+        dataSource={messages}
+        pagination={{
+          defaultPageSize: pageSize,
+          showQuickJumper: true,
+        }}
+        renderItem={(item, index) => (
+          <List.Item
+            extra={
+              <Button
+                type='primary'
+                onClick={() => {
+                  storageUtils.saveMessage(item.id);
+                  if (item.type === 'question') {
+                    storageUtils.saveQuestion(item.questionId);
+                    history.replace('/admin/addanswer');
+                  } else {
+                    storageUtils.saveThread(item.threadId);
+                    history.replace('/admin/chat');
+                  }
+                }}
+              >
+                Update
+              </Button>
+            }
+          >
+            <List.Item.Meta
+              avatar={<Avatar src={"https://robohash.org/" + item.id + "?set=set4"} />}
+              title={`${item.sender} - ${item.type === 'question' ? 'New Question' : 'Message'} (${item.type})`}
+              description={
+                <Collapse bordered={false} ghost={true}>
+                  <p style={{ paddingLeft: 0 }}>Sender: {item.sender}</p>
+                  <p style={{ paddingLeft: 0 }}>Message Id: {item.id}</p>
+                  <p style={{ paddingLeft: 0 }}>Thread Id: {item.threadId}</p>
+                  <p style={{ paddingLeft: 0 }}>Create Time: {item.createTime}</p>
+                  <p style={{ paddingLeft: 0 }}>Change Time: {item.changeTime}</p>
+
+                  <Panel header={"Type: " + item.type} key="2">
+                    {item.type === 'question' ? (
+                      <p style={{ paddingLeft: 24 }}>
+                        Dear Admin, A new Question ${item.questionId} is created, please add answer
+                      </p>
+                    ) : (
+                      <>
+                        <p style={{ paddingLeft: 24 }}>Dear {item.receiver}:</p>
+                        <p style={{ paddingLeft: 24 }}>{item.content}</p>
+                      </>
                     )}
-                />
-            </Card>
-        )
-    }
-}
+                  </Panel>
+                </Collapse>
+              }
+            />
+          </List.Item>
+        )}
+      />
+      <Pagination
+        current={currentPage}
+        pageSize={pageSize}
+        total={messages.length}
+        onChange={handlePageChange}
+        showQuickJumper
+      />
+    </Card>
+  );
+};
+
+export default Message;

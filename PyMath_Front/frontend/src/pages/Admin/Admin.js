@@ -27,6 +27,7 @@ import AddAnswer from '../AddAnswer/home'
 import usermanage from '../UserManage/home'
 import AdminMessage from '../Message/message'
 import chat from '../Chat/home'
+import EditAnswer from '../EditAnswer/home'
 
 
 
@@ -76,6 +77,7 @@ const App = () => {
             <Route path='/detail' component={Detail}></Route> */}
             <Route path='/admin/adminhome' component={Admin}></Route>
             <Route path='/admin/addanswer' component={AddAnswer}></Route>
+            <Route path='/admin/editanswer' component={EditAnswer}></Route>
             <Route path='/admin/usermanage' component={usermanage}></Route>
             <Route path='/admin/message' component={AdminMessage}></Route>
             <Route path='/admin/chat' component={chat}></Route>

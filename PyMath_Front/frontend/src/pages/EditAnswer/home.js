@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Breadcrumb, Layout, Menu, Button, Form, Input, message, Modal } from 'antd';
+import { Button, Form, Input, message, Modal } from 'antd';
 import MonacoEditor from 'react-monaco-editor';
 import storageUtils from '../../utils/storageUtils';
-import { runCode, getQuestions, provideAnswer, deleteMessagesByQuestionId } from '../../api';
+import { runCode, getQuestions, editAnswer } from '../../api';
 import { useHistory } from 'react-router-dom';
 
 const buttonStyle = {
@@ -15,6 +15,7 @@ const buttonStyle = {
 const Home = () => {
 
   const history = useHistory()
+  const [form] = Form.useForm(); // 获取 form 实例
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
   const [question, setQuestion] = useState([]);
@@ -32,16 +33,10 @@ const Home = () => {
 
   const handleOk = async () => {
     setIsModalVisible(false);
-    const data = await provideAnswer(storageUtils.getQuestion(), code, storageUtils.getUser(), password, explain);
+    const data = await editAnswer(storageUtils.getQuestion(), code, storageUtils.getUser(), password, explain);
     if (data.code === 200) {
-      const result = await deleteMessagesByQuestionId(storageUtils.getQuestion());
-      if(result.code === 200){
-        message.success(data.message);
-        history.replace('/admin/adminhome');
-      }else{
-        message.error(result.message);
-      }
-     
+      message.success(data.message);
+      history.replace('/admin/adminhome');
     }
     else {
       message.error(data.message);
@@ -67,24 +62,17 @@ const Home = () => {
     }
   };
 
-  const handleSave = async () => {
-    const data = await provideAnswer(storageUtils.getQuestion(), code, storageUtils.getUser(), password, explain);
-    if (data.code === 200) {
-      message.success(data.message);
-      history.replace('/admin/adminhome')
-    }
-    else {
-      message.error(data.message);
-    }
-    // handle response from provideAnswer
-  }
-
   const fetchQuestions = async () => {
     const data = await getQuestions(1, storageUtils.getQuestion(), null, null, null, null, null, null, null);
     if (data.code === 200) {
       if (data.data.records) {
         setQuestion(data.data.records[0].question);
         setLevel(data.data.records[0].level);
+        setCode(data.data.records[0].answer)
+        setExplain(data.data.records[0].answerExplain)
+        form.setFieldsValue({
+          explain:data.data.records[0].answerExplain,
+        });
       }
     } else {
       message.error(data.message);
@@ -102,7 +90,7 @@ const Home = () => {
       alignItems: 'center'
     }}>
       <h1>The Answer</h1>
-      <Form onFinish={handleFormSubmit} style={{ width: '400px' }}>
+      <Form form={form} style={{ width: '400px' }}>
         <Form.Item label="Question">
           <div>{question}</div>
         </Form.Item>
@@ -134,7 +122,11 @@ const Home = () => {
         >
           <Input.TextArea
             rows={codeLineCount}
-            onChange={(e) => setExplain(e.target.value)}
+            onChange={(e) => {
+              console.log("New value: ", e.target.value);
+              setExplain(e.target.value);
+          }}
+           
           />
         </Form.Item>
         <Form.Item>

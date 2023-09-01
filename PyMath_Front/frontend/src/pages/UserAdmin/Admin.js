@@ -1,96 +1,52 @@
-import './admin.css'
-import storageUtils from '../../utils/storageUtils'
-import { Redirect, Link, Switch, Route , withRouter} from 'react-router-dom';
-import {
-  DesktopOutlined,
-  FileOutlined,
-  PieChartOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
-import { Breadcrumb, Layout, Menu, useLocation } from 'antd';
-import React, { useState } from 'react';
-import Logo from '../../assets/images/logo192.png';
-import MHeader from '../../components/HeadNav/index';
+import React from 'react';
+import { Switch, Route, Redirect } from 'react-router-dom';
+import {Layout} from 'antd';
 import LeftNav from './../../components/LeftNav/index';
-import Home from '../Home/home';
-import Detail from '../QuestionDetail/home'
+import MHeader from '../../components/HeadNav/index';
 import Answer from '../AnswerQuestion/home';
 import Drag from '../DragAnswer/home';
-import DragExample from '../DragExample/home'
-import AnswerExample from '../AnswerExample/home'
-import User from '../UserHome/home'
-import Teacher from '../TeacherHome/home'
-import Upload from '../UploadQuestion/home';
-import Admin from '../AdminHome/home'
-import AddAnswer from '../AddAnswer/home'
-import UserProfile from '../UserProfile/home'
-import chat from '../Chat/Userchat'
+import DragExample from '../DragExample/home';
+import AnswerExample from '../AnswerExample/home';
+import User from '../UserHome/home';
+import UserProfile from '../UserProfile/home';
+import chat from '../Chat/home';
+import message from '../Message/message';
+import UserHistory from '../UserHistory/home';
+import storageUtils from '../../utils/storageUtils';
 
-
-
-const { Header, Content, Footer, Sider } = Layout;
+const { Content, Footer } = Layout;
 
 const App = () => {
- // const [collapsed, setCollapsed] = useState(false);
- // const user = storageUtils.getUser();
- // console.log('芝士user'+user.username)
-  //若内存中存了用户名，则已登录，否则跳转至登录界面
-  // // 前后跑通再取消注释是
-
-  // if (!user.username) {
-  //   return <Redirect to='/login' />
-  // }
+  // Check if user is logged in
+  const user = storageUtils.getUser();
+  const isLoggedI = !!user.username;
 
   return (
+    <Layout style={{ minHeight: '100vh' }}>
+      {/* If not logged in, redirect to /login */}
+      {!isLoggedI ? <Redirect to="/" /> : null}
 
-    <Layout
-      style={{
-        minHeight: '100vh',
-      }}
-    >
-     <LeftNav></LeftNav>
+      <LeftNav />
       <Layout className="site-layout">
-        {/* <Header
-          className="site-layout-background"
-          style={{
-            padding: 0,
-          }}
-        /> */}
-        <MHeader></MHeader>
-
-        <Content
-          style={{
-            margin: '0 0px',
-          }}
-        >
-        <Switch>
-            {/* <Route path='/home' component={Home}></Route> */}
-            <Route path='/useradmin/answer' component={Answer}></Route>
-            <Route path='/useradmin/drag' component={Drag}></Route>
-            <Route path='/useradmin/dragexample' component={DragExample}></Route>
-            <Route path='/useradmin/answerexample' component={AnswerExample}></Route>
-            <Route path='/useradmin/userhome' component={User}></Route>
-            <Route path='/useradmin/userinfo' component={UserProfile}></Route>
-            <Route path='/useradmin/chat' component={chat}></Route>
-            {/* <Route path='/teacherhome' component={Teacher}></Route>
-            <Route path='/upload' component={Upload}></Route>
-            <Route path='/detail' component={Detail}></Route>
-            <Route path='/adminhome' component={Admin}></Route>
-            <Route path='/addanswer' component={AddAnswer}></Route> */}
-            <Redirect to='/useradmin/userhome' />
-        </Switch>
+        <MHeader />
+        <Content style={{ margin: '0 0px' }}>
+          <Switch>
+            <Route path="/useradmin/answer" component={Answer} />
+            <Route path="/useradmin/drag" component={Drag} />
+            <Route path="/useradmin/dragexample" component={DragExample} />
+            <Route path="/useradmin/answerexample" component={AnswerExample} />
+            <Route path="/useradmin/userhome" component={User} />
+            <Route path="/useradmin/userinfo" component={UserProfile} />
+            <Route path="/useradmin/chat" component={chat} />
+            <Route path="/useradmin/message" component={message} />
+            <Route path="/useradmin/history" component={UserHistory} />
+            <Redirect to="/useradmin/userhome" />
+          </Switch>
         </Content>
-        <Footer
-          style={{
-            textAlign: 'center',
-          }}
-        >
-          Zcy designed ©2023
-        </Footer>
+        <Footer style={{ textAlign: 'center' }}>Zcy designed ©2023</Footer>
       </Layout>
     </Layout>
   );
 };
-export default App;
 
+export default App;

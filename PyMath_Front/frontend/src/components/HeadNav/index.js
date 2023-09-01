@@ -4,7 +4,7 @@ import { Layout, Button, Modal, Badge } from "antd";
 import memoryUtils from '../../utils/memoryUtils';
 import storageUtils from '../../utils/storageUtils';
 import menuList from '../../config/menuConfig';
-import { reqMyMessage } from '../../api/index';
+import { getMessageByReceiver, createMessage } from '../../api/index';
 
 import {
   NotificationOutlined,
@@ -24,17 +24,9 @@ class MHeader extends Component {
   }
 
   loadMessage = async () => {
-    const email = this.userEmail;
-    let result_json;
-    console.log(email);
-    result_json = await reqMyMessage(email);
-    console.log("shut up" + result_json.data);
-    const result = JSON.parse(result_json.data);
-    console.log("shut down" + result.code);
-    console.log("看看长度" + this.count);
+    const result = await getMessageByReceiver(1,storageUtils.getUser())
     if (result.code === 200) {
-      console.log("shut down" + result.return_obj);
-      this.setState({ count: result.return_obj.length });
+      this.setState({ count: result.data.total });
       console.log("看看长度" + this.state.count);
     }
   }
@@ -49,12 +41,18 @@ class MHeader extends Component {
   
   message = () => {
     this.setState({ count: 0 });
-    this.props.history.replace('/message');
+    this.props.history.replace('/useradmin/message');
+  }
+
+  handlechat = async() =>{
+    const data = await createMessage(storageUtils.getUser(),"Hello, Admin!");
+    storageUtils.saveThread(data.data);
+    this.props.history.replace('/useradmin/chat');
   }
   
   logout = () => {
     confirm({
-      title: '确定要退出登录吗？',
+      title: 'Confirm to logout？',
       onOk: () => {
         storageUtils.removeUser();
         this.props.history.replace('/login');
@@ -88,16 +86,14 @@ class MHeader extends Component {
   }
 
   render() {
-    const user = "sfsd";
     const { num, count } = this.state;
-    
     return (
       <Header style={{ background: '#fff', padding: 0 }}>
         <div className="header">
           <h2 className='header-title'></h2>
           <div className="header-user">
             <div className='userInfo'>
-              welcome，{user.username}
+              welcome，{storageUtils.getUser()}
               <Button onClick={this.logout}>log out</Button>
             </div>
             <div className='infoButton'>
@@ -111,6 +107,7 @@ class MHeader extends Component {
                   size='medium'
                   onClick={this.message}
                 >
+                  <Link to='/useradmin/message'></Link>
                 </Button>
               </Badge>
               
@@ -119,6 +116,7 @@ class MHeader extends Component {
                 type="default" 
                 size="medium"
                 style={{ marginLeft: '10px' }}
+                onClick={this.handlechat}
               >
                 <Link to="/useradmin/chat">Chat with Admin</Link>
               </Button>

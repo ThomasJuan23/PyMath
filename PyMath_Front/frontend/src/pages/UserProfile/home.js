@@ -1,143 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Form, Input, Select, Button, message } from 'antd';
+import { Link } from 'react-router-dom';
+import { getUserList, changeInfoUserend } from '../../api';
+import storageUtils from '../../utils/storageUtils';
 
 export default function TeacherProfileEdit() {
     const history = useHistory();
+    const [form] = Form.useForm();
+    const [info, setInfo] = useState({});
 
-    const [showPasswordFields, setShowPasswordFields] = useState(false);
+    useEffect(() => {
+        (async () => {
+            const result = await getUserList(1, null, null, storageUtils.getUser(), null);
+            if (result.code === 200) {
+                console.log(result.data.records[0]);
+                setInfo(result.data.records[0]);
+                form.setFieldsValue(result.data.records[0]);
+            } else {
+                message.error(result.message);
+            }
+        })();
+    }, [form]);
 
-    const initialValues = {
-        username: 'teacher123',
-        birthday: '1985-04-15',
-        safeQuestion: 'What was your first pet\'s name?',
-    };
-
-    const actualSafeAnswer = 'Buddy';
-
-
-    const handleCheckAnswer = (value) => {
-        if (value === actualSafeAnswer) {
-            setShowPasswordFields(true);
-        } else {
-            message.error("Incorrect answer to the security question!");
-        }
-    };
-
-    const handleFinish = (values) => {
-        if (values.newPassword && values.newPassword.length < 6) {
-            message.error("New password should be at least 6 characters long.");
-            return;
-        }
-
-        if (values.newPassword && values.newPasswordAgain !== values.newPassword) {
-            message.error("Passwords do not match.");
-            return;
-        }
-
+    const handleFinish = async(values) => {
         console.log('Saving changes:', values);
-        history.goBack();
+        const data = await changeInfoUserend(storageUtils.getUser(),values.userName,values.birthday,null,null,null,null);
+        if(data.code === 200){
+            message.success("Modify Successfully!");
+            const result = await getUserList(1, null, null, storageUtils.getUser(), null);
+             if (result.code === 200) {
+            console.log(result.data.records[0]);
+            setInfo(result.data.records[0]);
+            form.setFieldsValue(result.data.records[0]);
+        }
+        }
+        else{
+            message.error(data.message);
+        }
+    };
+
+    const handleClear = () => {
+        form.resetFields();
     };
 
     return (
         <div style={{ padding: 24, maxWidth: 800, margin: '50px auto' }}>
-            <h1 style={{ textAlign: 'center', marginBottom: '40px', fontSize: '24px' }}>Edit Teacher Profile</h1>
+            <h1 style={{ textAlign: 'center', marginBottom: '40px', fontSize: '24px' }}>Edit Student Profile</h1>
             <Form
+                form={form}
                 layout="vertical"
-                initialValues={initialValues}
+                initialValues={info}
                 onFinish={handleFinish}
             >
-                <Form.Item label="Username" name="username">
+                <Form.Item 
+                    label="Username" 
+                    name="userName" 
+                    rules={[{ required: true, message: 'Please input your username!' }]}
+                >
                     <Input />
                 </Form.Item>
 
-                <Form.Item label="Birthday" name="birthday">
-                    <Input type="date" />
-                </Form.Item>
-
-                <Form.Item label="Safe Question" name="safeQuestion">
-                    <Input readOnly />
-                </Form.Item>
-
-                <Form.Item
-                    name="safeAnswer"
-                    label="Safe Answer"
+                <Form.Item 
+                    label="Birthday" 
+                    name="birthday" 
                     rules={[
-                        {
-                            required: true,
-                            message: 'Please provide the answer!',
-                        },
-                        {
-                            validator(_, value) {
-                                return new Promise((resolve, reject) => {
-                                    if (!value) {
-                                        return reject(new Error('Please provide the answer!'));
-                                    }
-                                    if (value === actualSafeAnswer) {
-                                        setShowPasswordFields(true);
-                                        return resolve();
-                                    } else {
-                                        return reject(new Error('Incorrect answer to the security question!'));
-                                    }
-                                });
-                            },
-                        },
+                        { required: true, message: 'Please input your birthday!' },
+                        { pattern: /\d{4}-\d{2}-\d{2}/, message: 'The date format must be yyyy-mm-dd!' }
                     ]}
                 >
                     <Input />
                 </Form.Item>
 
-
-
-                {showPasswordFields && (
-                    <>
-                        <Form.Item
-                            label="New Password"
-                            name="newPassword"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: 'Please input your new password!',
-                                },
-                                {
-                                    pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/,
-                                    message: 'Password must be 6 characters, and contain at least 1 letter and 1 number.',
-                                },
-                            ]}
-                        >
-                            <Input.Password placeholder="Enter new password" />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="New Password, Again"
-                            name="newPasswordAgain"
-                            dependencies={['newPassword']}
-                            rules={[
-                                {
-                                    required: true,
-                                    message: 'Please confirm your new password!',
-                                },
-                                ({ getFieldValue }) => ({
-                                    validator(_, value) {
-                                        if (!value || getFieldValue('newPassword') === value) {
-                                            return Promise.resolve();
-                                        }
-                                        return Promise.reject(new Error('Passwords do not match.'));
-                                    },
-                                }),
-                            ]}
-                        >
-                            <Input.Password placeholder="Enter new password again" />
-                        </Form.Item>
-                    </>
-                )}
+                <Form.Item>
+                    <Link to="/reset">Reset Password </Link> 
+                    <p>(Save Changes Before you go to the reset password page)</p>
+                    <p>If you want to reset your safe answer, please connect to the admin</p>
+                </Form.Item>
 
                 <Form.Item>
                     <Button type="primary" htmlType="submit">
                         Save Changes
                     </Button>
-                    <Button style={{ marginLeft: '10px' }} onClick={() => history.goBack()}>
-                        Cancel
+                    <Button style={{ marginLeft: '10px' }} onClick={handleClear}>
+                        Clear
                     </Button>
                 </Form.Item>
             </Form>

@@ -98,7 +98,12 @@ class LeftNav extends Component {
                     <Menu.Item key="/useradmin/userinfo">
                         <AppstoreOutlined />
                         Personal Profile
-                        <Link to='/answer'></Link>
+                        <Link to="/useradmin/userinfo"></Link>
+                    </Menu.Item>
+                    <Menu.Item key="/useradmin/history">
+                        <AppstoreOutlined />
+                        Answer History
+                        <Link to="/useradmin/history"></Link>
                     </Menu.Item>
                 </Menu>
             </Sider>

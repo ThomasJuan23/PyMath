@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Breadcrumb, Layout, Menu, Button, Form } from 'antd';
+import React, { useState, useEffect } from 'react';
 import MonacoEditor from 'react-monaco-editor';
-import axios from 'axios';
-import { Base64 } from 'js-base64';
-import Joyride, { STATUS, ACTIONS, EVENTS } from 'react-joyride';
+import { Button, Form, Select, message } from 'antd';
+import Joyride, { STATUS } from 'react-joyride';
+import storageUtils from '../../utils/storageUtils';
+import { addHistory, getQuestions, verifyAnswer, getAfterQuestion, getBeforeQuestion } from '../../api';
 import { useHistory } from 'react-router-dom';
 
 const Home = () => {
@@ -29,6 +29,44 @@ const Home = () => {
       content: 'This is where the output will be displayed.',
     },
   ]);
+  const [question, setQuestion] = useState('');
+  const [explain, setExplain] = useState('');
+  const [type, setType] = useState('');
+  const [previous, setPrevious] = useState('');
+  const [next, setNext] = useState('');
+
+  useEffect(() => {
+
+
+    fetchQuestion();
+  }, []);
+
+  const fetchQuestion = async () => {
+    try {
+      const result = await getQuestions(1, storageUtils.getQuestion(), null, null, null, null, null, null, null);
+      if (result.code === 200) {
+        setQuestion(result.data.records[0].question);
+        setExplain(result.data.records[0].answerExplain);
+        setType(result.data.records[0].type);
+        const nextdata = await getAfterQuestion(storageUtils.getUser(),storageUtils.getQuestion());
+        if(nextdata.code === 200){
+          setNext(nextdata.data);
+        }else{
+          message.error(nextdata.message);
+        }
+        const previousdata = await getBeforeQuestion(storageUtils.getUser(),storageUtils.getQuestion());
+        if(previousdata.code === 200){
+          setPrevious(previous.data);
+        }else{
+          message.error(previousdata.message);
+        }
+      } else {
+        message.error(result.message);
+      }
+    } catch (error) {
+      console.error('Error fetching question:', error);
+    }
+  };
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
@@ -38,78 +76,82 @@ const Home = () => {
     }
   };
 
-const handleFormSubmit = async (event) => {
-  try {
-    const encodedCode = Base64.encode(code);
 
-    const options1 = {
-      method: 'POST',
-      url: 'https://judge0-ce.p.rapidapi.com/submissions',
-      params: {
-        base64_encoded: 'true',
-        fields: '*'
-      },
-      headers: {
-        'content-type': 'application/json',
-        'Content-Type': 'application/json',
-        'X-RapidAPI-Key': '0587ce0408msh08968b209325ec6p1219bbjsn9162c118313a',
-        'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
-      },
-      data: {
-        language_id: 71,
-        source_code: encodedCode
-      }
-    };
 
-    const response = await axios.request(options1);
-    console.log(response.data);
-    const submissionId = response.data.token;
 
-    const fetchResult = async () => {
-      try {
-        const options2 = {
-          method: 'GET',
-          url: `https://judge0-ce.p.rapidapi.com/submissions/${submissionId}`,
-          params: {
-            base64_encoded: 'true',
-            fields: '*'
-          },
-          headers: {
-            'X-RapidAPI-Key': '0587ce0408msh08968b209325ec6p1219bbjsn9162c118313a',
-            'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
-          }
-        };
+const handleFormSubmit = async () => {
+  const userAnswer = items.map((item) => item.content).join('\n');
+  const result = await verifyAnswer(userAnswer, storageUtils.getQuestion());
 
-        const result = await axios.request(options2);
-        console.log(result.data);
-        const { status_id, stdout, stderr } = result.data;
-
-        if (status_id === 1 || status_id === 2) {
-          setTimeout(fetchResult, 1000);
-        } else {
-          if (stdout) {
-            const decodedOutput = Base64.decode(stdout);
-            setOutput(decodedOutput);
-          } else if (stderr) {
-            const decodedError = Base64.decode(stderr);
-            setOutput(decodedError);
-          } else {
-            setOutput('No output available.');
-          }
-        }
-      } catch (error) {
-        console.error(error);
-        setOutput('Failed to fetch result.');
-      }
-    };
-
-    setTimeout(fetchResult, 1000);
-  } catch (error) {
-    console.error(error);
-    setOutput('Failed to execute Python code.');
+  if (result.code === 200) {
+    message.success(result.message);
+    setOutput(result.data);
+    const data = await addHistory(storageUtils.getUser(),storageUtils.getQuestion(),userAnswer,result.message+result.data,type);
+    if(data.code === 200){
+      handleNext();
+    }
+  } else {
+    message.error(result.message);
+    setOutput(result.data);
+    const data = await addHistory(storageUtils.getUser(),storageUtils.getQuestion(),userAnswer,result.message+result.data,type);
   }
 };
 
+const handleNext = async() =>{
+  const nextdata = await getAfterQuestion(storageUtils.getUser(),storageUtils.getQuestion());
+  if(nextdata.code === 200){
+    const questionId = nextdata.data;
+    if(questionId=="last one"){
+      message.error("This is the last question")
+    }
+    const result = await getQuestions(1, questionId, null, null, null, null, null, null, null);
+    if (result.code === 200) {
+      storageUtils.saveQuestion(questionId);
+      const level = result.data.records[0].level;
+      if(level==1)
+      history.replace('/useradmin/dragexample')
+      if(level==2)
+      history.replace('/useradmin/drag')
+      if(level==3)
+      fetchQuestion() 
+      if(level==4)
+      history.replace('/useradmin/answer')
+    } else {
+      message.error(result.message);
+    }
+  }else{
+    message.error(nextdata.message);
+  }
+
+}
+
+const handlePrevious = async() =>{
+  const nextdata = await getBeforeQuestion(storageUtils.getUser(),storageUtils.getQuestion());
+  if(nextdata.code === 200){
+    const questionId = nextdata.data;
+    if(questionId=="first one"){
+      message.error("This is the first question")
+    }else{
+    const result = await getQuestions(1, questionId, null, null, null, null, null, null, null);
+    if (result.code === 200) {
+      storageUtils.saveQuestion(questionId);
+      const level = result.data.records[0].level;
+      if(level==1)
+      history.replace('/useradmin/dragexample')
+      if(level==2)
+      history.replace('/useradmin/drag')
+      if(level==3)
+      fetchQuestion(); 
+      if(level==4)
+      history.replace('/useradmin/answer')
+    } else {
+      message.error(result.message);
+    }}
+  }else{
+    message.error(nextdata.message);
+  }
+
+}
   
 
   return (
@@ -123,22 +165,45 @@ const handleFormSubmit = async (event) => {
       alignItems: 'center',
       position:'relative'
     }}>
-    <button 
-         onClick={() => history.replace('/useradmin/answer')}
-         style={{
-             position: 'absolute',
-             top: '10px',
-             right: '10px',
-             backgroundColor: 'lightblue',
-             border: 'none',
-             borderRadius: '5px',
-             padding: '10px 15px',
-             cursor: 'pointer',
-             zIndex: 10001 // 确保它在Joyride覆盖层的上方
-         }}
-     >
-         Next
-     </button>
+   <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: '10px',
+          width: '100%', // 让整个 div 占满宽度
+          position: 'absolute',
+          top: 0, // 将 div 置于页面顶部
+        }}
+      >
+        <button
+          onClick={handlePrevious}
+          style={{
+            backgroundColor: 'lightblue',
+            border: 'none',
+            borderRadius: '5px',
+            padding: '10px 15px',
+            cursor: 'pointer',
+            zIndex: 10001,
+          }}
+          disabled={previous === "first one"} // 设为不可点击状态
+        >
+          Previous
+        </button>
+        <button
+          onClick={handleNext}
+          style={{
+            backgroundColor: 'lightblue',
+            border: 'none',
+            borderRadius: '5px',
+            padding: '10px 15px',
+            cursor: 'pointer',
+            zIndex: 10001,
+          }}
+          disabled={next === "last one"} // 设为不可点击状态
+        >
+          Next
+        </button>
+        </div>
       <Joyride
         callback={handleJoyrideCallback}
         continuous={true}
@@ -146,7 +211,16 @@ const handleFormSubmit = async (event) => {
         scrollToFirstStep={true}
         showProgress={true}
         showSkipButton={true}
-        steps={steps}
+        steps={steps.map((step, index) => {
+          if (index === 1) {
+            // 在第二个步骤中添加 explain 内容
+            return {
+              ...step,
+              content: step.content + ' ' + explain,
+            };
+          }
+          return step;
+        })}
         styles={{
           options: {
             // you can customize the colors
@@ -158,9 +232,9 @@ const handleFormSubmit = async (event) => {
 
       <h1>My Answer</h1>
 
-      <Form onFinish={handleFormSubmit} style={{ width: '400px' }}>
+      <Form onFinish={handleFormSubmit} style={{ width: '400px', textAlign: 'center' }}>
         <Form.Item label="Question" className='question-item'>
-          <div style={{ marginBottom: '10px' }}>Example Question: example1</div>
+          <div>{question}</div>
         </Form.Item>
         <Form.Item label="Answer" className='answer-item'>
           <MonacoEditor
@@ -180,7 +254,7 @@ const handleFormSubmit = async (event) => {
       </Form>
 
       <div style={{ display: 'flex', alignItems: 'center' }}>
-    <h3 style={{ marginRight: '10px', fontSize: '16px' }}>Output:</h3>
+    <h3 style={{ marginRight: '10px', fontSize: '16px' }}>Feedback:</h3>
     <pre style={{ whiteSpace: 'nowrap', overflow: 'auto', margin: 0, fontSize: '16px' }}>{output}</pre>
 </div>
     </div>

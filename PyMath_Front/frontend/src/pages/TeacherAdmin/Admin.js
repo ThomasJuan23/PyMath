@@ -25,6 +25,8 @@ import Upload from '../UploadQuestion/home';
 import Admin from '../AdminHome/home'
 import AddAnswer from '../AddAnswer/home'
 import teacherinfo from '../TeacherProfile/home'
+import message from '../Message/message'
+import chat from '../Chat/home'
 
 
 
@@ -74,6 +76,8 @@ const App = () => {
             <Route path='/teacheradmin/upload' component={Upload}></Route>
             <Route path='/teacheradmin/detail' component={Detail}></Route>
             <Route path='/teacheradmin/teacherinfo' component={teacherinfo}></Route>
+            <Route path='/teacheradmin/message' component={message}></Route>
+            <Route path='/teacheradmin/chat' component={chat}></Route>
             {/* <Route path='/adminhome' component={Admin}></Route>
             <Route path='/addanswer' component={AddAnswer}></Route> */}
             <Redirect to='/teacheradmin/teacherhome' />

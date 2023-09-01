@@ -1,42 +1,198 @@
-import React, { useState } from 'react';
-import { List, Input, Button, Avatar } from 'antd';
+import React, { useState, useRef, useEffect } from 'react';
+import { List, Input, Button, message } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
+import storageUtils from '../../utils/storageUtils';
+import { getMessageByThread, replyMessage } from '../../api/index';
+import SockJS from 'sockjs-client';
+import { Stomp } from '@stomp/stompjs';
 
 const ChatInterface = () => {
-    const [messages, setMessages] = useState([
-        { id: 1, user: 'Alice', content: 'Hi there!' },
-        { id: 2, user: 'Bob', content: 'Hello!' },
-        // ...您可以添加更多的默认聊天记录
-    ]);
+    const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+    const chatContainerRef = useRef(null);
+    const currentUser = storageUtils.getUser();
+    const pageSize = 5;
+    const [currentPage, setCurrentPage] = useState(0); // Track the current page
 
-    const handleSendMessage = () => {
+    useEffect(() => {
+        async function fetchLastPage() {
+            try {
+                const initialResult = await getMessageByThread(1, storageUtils.getThread());
+                if (initialResult.code === 200) {
+                    const total = initialResult.data.total;
+                    const lastPage = Math.ceil(total / pageSize);
+                    setCurrentPage(lastPage);
+
+                    const result = await getMessageByThread(lastPage, storageUtils.getThread());
+                    if (result.code === 200) {
+                        setMessages(result.data.records);
+
+                        if (chatContainerRef.current) {
+                            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                        }
+                    }
+                } else {
+                    message.error(initialResult.message);
+                }
+            } catch (error) {
+                console.error('An error occurred:', error);
+                message.error('An error occurred while fetching messages');
+            }
+        }
+
+        fetchLastPage();
+
+        const socket = new SockJS('http://localhost:3030/websocket-endpoint');
+        const stompClient = Stomp.over(socket);
+        stompClient.reconnect_delay = 5000;  // Add this line for reconnection delay
+
+        stompClient.connect({}, () => {
+            console.log(currentUser);
+            stompClient.subscribe(`/topic/replies`, (message) => {
+                const newMessage = JSON.parse(message.body);
+                console.log(newMessage);
+                if(newMessage.threadId === storageUtils.getThread() ){
+                setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+                setTimeout(() => {
+                    if (chatContainerRef.current) {
+                        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                    }
+                }, 0);
+            }
+            });
+            
+        }, error => {
+            console.log('STOMP:', error);
+            setTimeout(() => {
+                stompClient.connect({}, () => {
+                    // 重连后的逻辑，可以和上面正常连接的逻辑相同
+                    stompClient.subscribe(`/topic/replies`, (message) => {
+                        const newMessage = JSON.parse(message.body);
+                        console.log(newMessage);
+                        if(newMessage.threadId === storageUtils.getThread() ){
+                        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        
+                        setTimeout(() => {
+                            if (chatContainerRef.current) {
+                                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                            }
+                        }, 0);
+                    }
+                    });
+                }, (error) => {
+                    console.log("STOMP: Reconnect failed:", error);
+                    // 这里可以递归地调用自身以持续尝试重新连接
+                    // 或者设置一个最大重连尝试次数
+                });
+            }, stompClient.reconnect_delay);
+        });
+
+        return () => {
+            if (stompClient) {
+                stompClient.disconnect();
+            }
+        };
+    }, []);
+
+    // Listen for messages array change and handle loading more content
+    useEffect(() => {
+        const isScrollable = chatContainerRef.current ? chatContainerRef.current.scrollHeight > chatContainerRef.current.clientHeight : false;
+        if (!isScrollable && currentPage > 1) {
+            handleLoadMore();
+        }
+    }, [messages]);
+
+
+    const handleSendMessage = async () => {
         if (newMessage.trim() !== '') {
-            const nextId = messages.length + 1;
-            const currentUser = "User"; // 这里可以换成当前用户的名字
-            setMessages([...messages, { id: nextId, user: currentUser, content: newMessage }]);
-            setNewMessage('');
+            let receiver = '';
+            if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+                receiver = lastMessage.sender === currentUser ? lastMessage.receiver : lastMessage.sender;
+            }
+    
+            try {
+                const result = await replyMessage(currentUser, receiver, newMessage, storageUtils.getThread());
+                if (result.code === 200) {
+                    setMessages([...messages, { sender: currentUser, receiver: receiver, content: newMessage, createTime: result.data }]);
+                    setNewMessage('');
+
+                    setTimeout(() => {
+                        if (chatContainerRef.current) {
+                            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                        }
+                    }, 0);
+                } else {
+                    message.error(result.message);
+                }
+            } catch (error) {
+                console.error('An error occurred:', error);
+                message.error('An error occurred while sending message');
+            }
+        }
+    };
+
+    const handleLoadMore = async () => {
+        const prevPage = currentPage - 1;
+        setCurrentPage(prevPage);
+
+        // 添加一个非空检查
+        if (chatContainerRef.current) {
+            const oldScrollHeight = chatContainerRef.current.scrollHeight;
+
+            const result = await getMessageByThread(prevPage, storageUtils.getThread());
+            if (result.code === 200 && result.data.records.length > 0) {
+                setMessages(prevState => [...result.data.records, ...prevState]);
+
+                // 一点时间延迟以便DOM更新
+                setTimeout(() => {
+                    if (chatContainerRef.current) {
+                        // 再次添加一个非空检查
+                        const newScrollHeight = chatContainerRef.current.scrollHeight;
+                        const scrollDifference = newScrollHeight - oldScrollHeight;
+
+                        // 设置新的滚动位置
+                        chatContainerRef.current.scrollTop = scrollDifference;
+                    }
+                }, 100);
+            }
+        }
+    };
+
+
+    const handleScroll = async (e) => {
+        const scrollTop = e.target.scrollTop;
+        if (scrollTop === 0 && currentPage > 1) {
+            handleLoadMore();
         }
     };
 
     return (
         <div style={{ width: '500px', margin: '50px auto' }}>
-            <List
+
+            <div
+                ref={chatContainerRef}
+                onScroll={handleScroll}
                 style={{ height: '400px', overflow: 'auto', marginBottom: '20px' }}
-                dataSource={messages}
-                renderItem={message => (
-                    <List.Item style={{ display: 'flex', justifyContent: message.user === 'User' ? 'flex-end' : 'flex-start' }}>
-                        <div style={{ maxWidth: '70%', overflowWrap: 'break-word', borderRadius: '15px', padding: '10px', background: message.user === 'User' ? '#1890ff' : '#f7f7f7' }}>
-                            <strong>{message.user}</strong>
-                            <p>{message.content}</p>
-                        </div>
-                    </List.Item>
-                )}
-            />
+            >
+                <List
+
+                    dataSource={messages}
+                    renderItem={message => (
+                        <List.Item style={{ display: 'flex', justifyContent: message.sender === currentUser ? 'flex-end' : 'flex-start' }}>
+                            <div style={{ maxWidth: '70%', overflowWrap: 'break-word', borderRadius: '15px', padding: '10px', background:  '#f7f7f7' }}>
+                                <strong>{message.sender}</strong> - {message.createTime}
+                                <p>{message.content}</p>
+                            </div>
+                        </List.Item>
+                    )}
+                />
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Input 
-                    placeholder="Type your message..." 
-                    value={newMessage} 
+                <Input
+                    placeholder="Type your message..."
+                    value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onPressEnter={handleSendMessage}
                     style={{ width: '85%', marginRight: '10px' }}

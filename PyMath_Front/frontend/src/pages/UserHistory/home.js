@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import { Table, Input, Select, DatePicker, Pagination, message } from 'antd';
 import { useHistory } from 'react-router-dom';
-import { getQuestionsByPage, getUserList, getQuestions } from '../../api';
+import { getHistoryList, getQuestions } from '../../api';
 import storageUtils from '../../utils/storageUtils';
 
 const { Search } = Input;
@@ -10,7 +10,6 @@ const { RangePicker } = DatePicker;
 
 export default function HomePage() {
     const history = useHistory();
-    const [distinctTypes, setDistinctTypes] = useState([]);
     const [questions, setQuestions] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 5, total: 0 });
     const [filters, setFilters] = useState({searchText: null, start: null, end: null });
@@ -31,20 +30,35 @@ export default function HomePage() {
 
     const fetchQuestions = async () => {
         const { searchText, start, end } = filters;
-        const data = await getQuestionsByPage(pagination.current, storageUtils.getUser(), searchText, start, end);
-        if (data.code == 200) {
+        const data = await getHistoryList(pagination.current, storageUtils.getUser(), searchText, start, end);
+        console.log(storageUtils.getUser())
+        console.log(pagination.current)
+        
+        if (data.code === 200) {
           if (data.data.records) {
-            setQuestions(data.data.records);
+            const updatedQuestions = await Promise.all(
+              data.data.records.map(async (record) => {
+                const questionId = record.questionId; // Assuming the property is named questionId
+                console.log(questionId)
+                const questionResponse = await getQuestions(1, questionId, null,null,null,null,null,null,null);
+                const question = questionResponse.data.records[0].question;
+                console.log(question)
+                return {
+                  ...record,
+                  question: question
+                };
+              })
+            );
+            setQuestions(updatedQuestions);
           }
+      
           if (data.data.total !== pagination.total) {
             setPagination(prev => ({ ...prev, total: data.data.total }));
           }
-        }
-        else {
+        } else {
           message.error(data.message);
         }
       };
-
     const columns = [
         {
             title: 'ID',
@@ -57,14 +71,19 @@ export default function HomePage() {
             key: 'question',
         },
         {
-            title: 'Level',
-            dataIndex: 'level',
-            key: 'level',
-        },
-        {
             title: 'Type',
             dataIndex: 'type',
             key: 'type',
+        },
+        {
+            title: 'Answer',
+            dataIndex: 'answer',
+            key: 'answer',
+        },
+        {
+            title: 'Feedback',
+            dataIndex: 'feedback',
+            key: 'feedback',
         },
         {
             title: 'Create Time',
@@ -76,35 +95,7 @@ export default function HomePage() {
             dataIndex: 'changeTime',
             key: 'changeTime',
         },
-        {
-            title: 'Create Teacher Email',
-            dataIndex: 'email',
-            key: 'email',
-        },
     ];
-
-    const handleRowClick = async(record) => {
-        console.log('Navigate to details for:', record);
-        storageUtils.saveQuestion(record.id);
-        const result = await getQuestions(1,record.id,null,null,null,null,null,null,null);
-        if(result.code===200){
-            const level = result.data.records[0].level;
-            console.log('Navigate to details for:', level);
-            if(level==1)
-            history.replace('/useradmin/dragexample')
-            if(level==2)
-            history.replace('/useradmin/drag')
-            if(level==3)
-            history.replace('/useradmin/answerexample')
-            if(level==4)
-            history.replace('/useradmin/answer')
-        }else{
-            error.message(result.message);
-        }
-        
-        // Implement navigation logic to the details page here.
-    };
-
     return (
         <div style={{ padding: 24, minHeight: 600 }}>
             <h1>Questions List</h1>
@@ -122,11 +113,6 @@ export default function HomePage() {
                 dataSource={questions}
                 columns={columns}
                 scroll={{ x: '100%', y: '100%' }}
-                onRow={(record) => {
-                    return {
-                        onClick: () => handleRowClick(record), // Click row to navigate to details
-                    };
-                }}
             />
         </div>
     );

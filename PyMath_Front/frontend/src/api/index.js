@@ -1,581 +1,412 @@
-//接口请求函数
-import ajax from './ajax';
-const BASE = '';
+import axios from 'axios';
 
-//用户名登录
-export const reqLogin_username = (username, password) => {
-    return ajax(
-        {
-            method: 'POST',
-            url: BASE + '/login',
-            data: {
-                username,
-                password
-            }
-        }
-    )
-}
-//邮箱登录
-export const reqLogin_email = (email, password) => {
-    return ajax(
-        {
-            method: 'POST',
-            url: BASE + '/login',
-            data: {
-                email,
-                password
-            }
-        }
-    )
-}
+const baseUrl = 'http://localhost:3030';
 
-//个人注册
-export const reqRegister = (email, username, role, password, repeatPwd) => {
-    return ajax(
-        {
-            method: 'POST',
-            url: BASE + '/register/customer',
-            data: {
-                email,
-                password,
-                username,
-                role,
-                repeatPwd
-            }
-        }
-    )
-}
-
-//服务注册
-export const reqProviderRegister = (email, username, role, password, repeatPwd, description, address, postcode) => {
-    return ajax(
-        {
-            method: 'POST',
-            url: BASE + '/register/serviceProvider',
-            data: {
-                email,
-                username,
-                role,
-                password,
-                repeatPwd,
-                description,
-                address,
-                postcode
-            }
-        })
-}
-
-
-// 获取所有服务
-export const reqServices = (searchCategory, searchCity, pageNum) => {
-    return ajax(BASE + '/service/search?',
-        {
-            params: {
-                catagory: searchCategory,
-                city: searchCity,
-                pageNum: pageNum
-            }
-        }
-    )
-}
-
-export const reqProviders = (pageNum, pageSize) => {
-    return ajax(BASE + '/user/info',
-        {
-            params: {
-                pageNum,
-                pageSize,
-            }
-        }
-    )
-}
-
-
-//搜索
-//搜索服务（按分类和地址）
-export const reqSearchServices = ({ pageNum, pageSize, searchCategory, searchCity }) => {
-    return ajax(BASE + '/service/search',
-        {
-            params: {
-                pageNum,
-                pageSize,
-                searchCategory,
-                searchCity
-            }
-        }
-    )
-}
-//按id搜索服务，其实这个好像用处不大了已经。
-export const reqServicebyId = (serviceId) => {
-    return ajax(BASE + '/service/info?',
-        {
-            params: {
-                serviceId
-            }
-        }
-
-    )
-}
-
-export const reqReviewRate = (serviceId) => {
-    return ajax(BASE + '/user/review',
-        {
-            params: {
-                serviceId
-            }
-        }
-
-    )
-}
-
-//按service的id获取评论
-export const reqCommentbyId = (provider,service) => {
-    return ajax(BASE + '/review/info?',
-        {
-            params: {
-                provider:provider,
-                service:service
-            }
-        }
-    )
-}
-//获取评论
-export const reqComment = (provider, service) => {
-    return ajax(BASE + '/review/info?', {
-        params: {
-            provider: provider,
-            service: service
-        }
-    })
-}
-
-
-
-//新建request
-// 订阅服务，注册服务提供商给管理员发送request
-// 等后端通知接口
-export const reqAddService = (sender,
-    receiver,
-    name,
-    cost,
-    content,
-    status,) => {
-    return ajax(
-        {
-            method: 'POST',
-            url: BASE + '/request/send',
-            data: {
-                sender,
-                receiver,
-                service: {
-                    name,
-                    cost
-                },
-                content,
-                status,
-            }
-        }
-    )
-}
-
-export const reqAcptServer = (adminKey, provider, service) => {
-    return ajax(
-        {
-            method: 'POST',
-            url: BASE + '/service/acpt',
-            data: {
-                adminKey,
-                provider,
-                service
-            }
-        }
-    )
-}
-
-export const reqDelComment = (adminKey, provider, service, username) => {
-    return ajax(BASE + '/review/rm',
-        {
-            method: 'POST',
-            data: {
-                adminKey,
-                provider,
-                service,
-                username
-            }
-        }
-    )
-}
-
-// export const reqRequest = (username) => {
-//     return ajax(
-//         {
-//             method: 'POST',
-//             url: BASE + '/request',
-//             data: {
-//                 username,
-//             }
-//         }
-//     )
-// }
-export const reqDecServer = (adminKey, provider, service) => {
-    return ajax(
-        {
-            method: 'POST',
-            url: BASE + '/service/acpt',
-            data: {
-                adminKey,
-                provider,
-                service
-            }
-        }
-    )
-}
-
-
-
-export const reqUpdateInformation = (email, username, address, postcode, description) => {
-    return ajax(BASE + '/user/update',
-        {
-            method: 'POST', 
-            data: {
-                email,
-                username,
-                address,
-                postcode,
-                description
-            }
-        })
-}
-
-// // 订阅服务
-// // 等后端通知接口
-// export const reqSubscribeService = (userEmail, providerEmail, serviceName, content) => {
-//     return ajax.post(BASE + '待修改',
-//         {
-
-//             data: {
-//                 userEmail,
-//                 providerEmail,
-//                 serviceName,
-//                 content
-//             }
-//         }
-//     )
-// }
-
-//获取正在进行的服务    
-export const reqMyRequest = (in_email) => {
-    return ajax(BASE + '/request/sender?',
-        {
-            params: {
-                email: in_email
-            }
-        }
-    )
-}
-
-//获取正在进行的服务    
-// export const reqMyRequest = (email) => {
-//     return ajax(BASE + '/request/receiver?',
-//         {
-//             params: { email:email 
-//             }
-//         }
-//     )
-// }
-
-// export const reqRequest = (email) => {
-//     return ajax(BASE + '/request/sender?',
-//         {
-//             params: { email:email 
-export const reqMyMessage = (in_email) => {
-    return ajax(BASE + '/request/receiver?',
-        {
-            params: {
-                email: in_email
-            }
-        }
-    )
-}
-
-//获取已经完成的服务    
-export const reqHistoryRequest = (in_email) => {
-    return ajax(BASE + '/request/history?',
-        {
-            params: { 
-                email:in_email
-            }
-        }
-    )
-}
-
-
-//历史服务里提交评论
-export const reqAddReview = (provider,
-    service,
-    username,
-    content,
-    ctime,
-    level) => {
-    return ajax(BASE + '/review/add',
-        {
-            method: 'POST',
-            data: {
-                provider,
-                service,
-                username,
-                content,
-                ctime,
-                level
-            }
-        }
-    )
-}
-
-//个人信息里提交修改
-export const reqEditUser = (
-    email,
-    username,
-    address,
-    postcode,
-    description) => {
-    return ajax(BASE + '/user/update',
-        {
-            method: 'POST',
-            data: {
-                email,
-                username,
-                address,
-                postcode,
-                description
-            }
-        })
-}
-
-//更改密码
-export const reqUpdatePassword = (
-    email,
-    oldPwd,
-    newPwd,
-    repeatNewPwd) => {
-    return ajax(BASE + '/pwd/update',
-        {
-            method: 'POST',
-            data: {
-                email,
-                oldPwd,
-                newPwd,
-                repeatNewPwd
-            }
-        })
-}
-
-
-//更新服务
-export const reqUpdateRequest = (in_id, in_content, in_status) => {
-    return ajax(BASE + '/request/update',
-        {
-            method: 'POST',
-            data: {
-                _id: in_id,
-                content: in_content,
-                status: in_status   
-            }
-        }
-    )
-}
-//用户取消服务
-export const reqRejectRequest = (id, status) => {
-    return ajax(BASE + '待修改',
-        {
-            method: 'POST',
-            data: {
-                id, status
-            }
-        }
-    )
-}
-
-export const sendRequest = (sender,receiver,service,content,status) => {
-    return ajax(BASE+'/request/send',
-    {
-        method: 'POST',
-        data:{
-            sender,
-            receiver,
-            service,
-            content,
-            status
-        }
+export const reqSendEmail = async (emailAddress) => {
+    try {
+      const response = await axios.put(`${baseUrl}/public/User/send-email`, null, {
+        params: { emailAddress }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error sending email:", error);
+      throw error;
     }
-    )
-}
+  };
+  
 
-export const updateRequest = (_id,content,status) => {
-    return ajax(BASE+'/request/update',
-    {
-        method: 'POST',
-        data:{
-            _id,
-            content,
-            status
-        }
+export const verifyEmail = async (emailAddress, userCaptcha) => {
+  const response = await axios.put(`${baseUrl}/public/User/verify-email`, null, {
+    params: { emailAddress, userCaptcha }
+  });
+  return response.data;
+};
+
+export const loginUser = async (email, password) => {
+  const response = await axios.put(`${baseUrl}/public/User/login`, null, {
+    params: { email, password }
+  });
+  return response.data;
+};
+
+export const registerUser = async (email, username, role, password, birthday, ageGroup, institution, realName, idCard, safeQ, safeA) => {
+  const response = await axios.post(`${baseUrl}/public/User/register`, null, {
+    params: {
+      email,
+      username,
+      role,
+      password,
+      birthday,
+      ageGroup,
+      institution,
+      realName,
+      idCard,
+      safeQ,
+      safeA
     }
-    )
-}
+  });
+  return response.data;
+};
 
-export const addService = (provider,service,catagory,description,area,availability,price) => {
-    return ajax(BASE + '/service/add',
-    {
-        method: 'POST',
-        data:{
-            provider,
-            service,
-            catagory,
-            description,
-            area,
-            availability,
-            price
-        }
+export const getSafeQuestion = async (email) => {
+  const response = await axios.get(`${baseUrl}/public/User/safequestion`, {
+    params: { email }
+  });
+  return response.data;
+};
+
+export const verifySafeAnswer = async (email, userSafeAnswer) => {
+  const response = await axios.post(`${baseUrl}/public/User/verifysafeanswer`, null, {
+    params: { email, userSafeAnswer }
+  });
+  return response.data;
+};
+
+export const changePassword = async (email, newPassword) => {
+  const response = await axios.put(`${baseUrl}/public/User/changepassword`, null, {
+    params: { email, newPassword }
+  });
+  return response.data;
+};
+
+export const changeInfoUserend = async (email, username, birthday, ageGroup, institution, realName, idCard) => {
+  const response = await axios.put(`${baseUrl}/public/User/changeinfouserend`, null, {
+    params: {
+      email,
+      username,
+      birthday,
+      ageGroup,
+      institution,
+      realName,
+      idCard
     }
-    )
-}
+  });
+  return response.data;
+};
 
-export const acceptPro = (adminKey,email) => {
-    return ajax(BASE + '/user/acpt',
-    {
-        method: 'POST',
-        data:{
-            adminKey,
-            email
-        }
+export const changeInfoAdminend = async (email, safeQuestion, safeAnswer, adminEmail, adminPass) => {
+  const response = await axios.put(`${baseUrl}/public/User/changeinfoadminend`, null, {
+    params: {
+      email,
+      safeQuestion,
+      safeAnswer,
+      adminEmail,
+      adminPass
     }
-    )
-}
+  });
+  return response.data;
+};
 
-export const removePro = (adminKey,email) => {
-    return ajax(BASE + '/user/rm',
-    {
-        method: 'POST',
-        data:{
-            adminKey,
-            email
-        }
+export const deleteUser = async (email, adminEmail, adminPass) => {
+  const response = await axios.delete(`${baseUrl}/public/User/deleteUser`, {
+    params: {
+      email,
+      adminEmail,
+      adminPass
     }
-    )
-}
+  });
+  return response.data;
+};
 
-export const updateService = (provider,service,catagory,description,area,availability,price) => {
-    return ajax(BASE + '/service/update',
-    {
-        method: 'POST',
-        data:{
-            provider,
-            service,
-            catagory,
-            description,
-            area,
-            availability,
-            price
-        }
+export const getUserList = async (current, type, username, email, userId) => {
+  const response = await axios.get(`${baseUrl}/public/User/getUserList`, {
+    params: {
+      current,
+      type,
+      username,
+      email,
+      userId
     }
-    )
-}
-//用户获取所有消息
-export const reqMessage = (email) => {
+  });
+  return response.data;
+};
 
-    return ajax(BASE + '',
-        {
-            params: {
-                email
-            }
-        }
-    )
 
-}
+// 验证答案
+export const verifyAnswer = async (code, questionID) => {
+  try {
+    const response = await axios.put(`${baseUrl}/public/Question/verifyAnswer`, null, {
+      params: { code, questionID }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
 
-export const reqUserInfo = (username) => {
-    return ajax(BASE + '/user/info?',
-    {
-        params: {
-            username : username
-        }
+export const runCode = async (code) => {
+  try {
+    const response = await axios.put(`${baseUrl}/public/Question/runCode`, null, {
+      params: { code}
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 提供答案
+export const provideAnswer = async (questionID, answer, adminEmail, adminPass, answerExplain) => {
+  try {
+    const response = await axios.post(`${baseUrl}/public/Question/provideAnswer`, null, {
+      params: { questionID, answer, adminEmail, adminPass, answerExplain }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 添加问题
+export const addQuestion = async (question, level, type, ageGroup, email) => {
+  try {
+    const response = await axios.post(`${baseUrl}/public/Question/addQuestion`, null, {
+      params: { question, level, type, ageGroup, email }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 编辑答案
+export const editAnswer = async (questionID, answer, adminEmail, adminPass, answerExplain) => {
+  try {
+    const response = await axios.put(`${baseUrl}/public/Question/editAnswer`, null, {
+      params: { questionID, answer, adminEmail, adminPass, answerExplain }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 删除问题
+export const deleteQuestion = async (email, questionId) => {
+  try {
+    const response = await axios.delete(`${baseUrl}/public/Question/deleteQuestion`, {
+      params: { email, questionId }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 获取用户问题列表
+export const getQuestionsByPage = async (current,email,questionType,startDate,endDate) => {
+  try {
+    const response = await axios.get(`${baseUrl}/public/History/getQuestionsByPage`, {
+      params: { current, email, questionType, startDate, endDate }
     }
-)
-}
+    );
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
 
-export const reqUnProvider = () => {
-    return ajax(BASE + '/user/unavailable',
-    {
-        params: {
-        
+export const getBeforeQuestion = async (email, questionId) => {
+  try {
+    const response = await axios.get(`${baseUrl}/public/Question/getBeforeQuestion`, {
+      params: { email, questionId }
     }
+    );
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+export const getAfterQuestion = async (email,questionId) => {
+  try {
+    const response = await axios.get(`${baseUrl}/public/Question/getAfterQuestion`, {
+      params: { email, questionId}
     }
-)
-}
+    );
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
 
-export const reqLowProvider = () => {
-    return ajax(BASE + '/user/lowLevel',
-    {
-        params: {
-        
-    }
-    }
-)
-}
+// 获取不同类型
+export const getDistinctTypes = async () => {
+  try {
+    const response = await axios.get(`${baseUrl}/public/Question/getDistinctTypes`);
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
 
-export const reqProviderService = (provider) => {
-    return ajax(BASE + '/service/info?',
-    {
-        params: {
-            provider : provider
-        }
-    }
-)
-}
+// 获取问题
+export const getQuestions = async (current, questionID, questionContent, type, ageGroup, hasAnswer, email, startDate, endDate) => {
+  try {
+    const response = await axios.get(`${baseUrl}/public/Question/getQuestions`, {
+      params: { current, questionID, questionContent, type, ageGroup, hasAnswer, email, startDate, endDate }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 编辑问题
+export const editQuestion = async (email, questionId, question, type, ageGroup, level) => {
+  try {
+    const response = await axios.put(`${baseUrl}/public/Question/editQuestion`, null, {
+      params: { email, questionId, question, type, ageGroup, level }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 提交问题
+export const submitQuestion = async (senderEmail, receiverEmail, questionId) => {
+  try {
+    const response = await axios.post(`${baseUrl}/public/Message/submitQuestion`, null, {
+      params: { senderEmail, receiverEmail, questionId }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 创建新消息
+export const createMessage = async (senderEmail, content) => {
+  try {
+    const response = await axios.post(`${baseUrl}/public/Message/createMessage`, null, {
+      params: { senderEmail, content }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 回复消息
+export const replyMessage = async (sender, receiver, content, threadId) => {
+  try {
+    const response = await axios.post(`${baseUrl}/public/Message/replyMessage`, null, {
+      params: { sender, receiver, content, threadId }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 通过接收者获取消息
+export const getMessageByReceiver = async (current, email) => {
+  try {
+    const response = await axios.get(`${baseUrl}/public/Message/getMessageByReceiver`, {
+      params: { current, email }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 通过Thread ID获取消息
+export const getMessageByThread = async (current, threadId) => {
+  try {
+    const response = await axios.get(`${baseUrl}/public/Message/getMessageByThread`, {
+      params: { current, threadId }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 通过问题ID删除消息
+export const deleteMessagesByQuestionId = async (questionId) => {
+  try {
+    const response = await axios.delete(`${baseUrl}/public/Message/DeleteByQuestion`, {
+      params: { questionId }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 通过消息ID删除消息
+export const deleteMessageById = async (id) => {
+  try {
+    const response = await axios.delete(`${baseUrl}/public/Message/DeleteById`, {
+      params: { id }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+// 通过Thread ID删除消息
+export const deleteMessagesByThreadId = async (threadId) => {
+  try {
+    const response = await axios.delete(`${baseUrl}/public/Message/DeleteByThreadId`, {
+      params: { threadId }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+export const getHistoryList = async (current, emailAddress, Type, start, end) => {
+  try {
+    const response = await axios.get(`${baseUrl}/public/History/getHistoryList`, {
+      params: {
+        current,
+        emailAddress,
+        Type,
+        start,
+        end
+      }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+export const addHistory = async (email, Question_Id, Answer, Feedback, Type) => {
+  try {
+    const response = await axios.post(`${baseUrl}/public/History/addHistory`, null, {
+      params: {
+        email,
+        Question_Id,
+        Answer,
+        Feedback,
+        Type
+      }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+export const getLastQuestion = async (email, Type) => {
+  try {
+    const response = await axios.get(`${baseUrl}/public/History/lastQuestion`, null, {
+      params: {
+        email,
+        Type
+      }
+    });
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
 
 
 
-
-//用户展示个人信息（还用来拿provider或user的邮箱）
-// export const reqUserInfo = (provider) => {
-//     return ajax(BASE + '/user/info?',
-//         {
-//             params: {
-//                 username: provider
-//             }
-//         }
-//     )
-// }
-
-export const reqUserInfo_email = (provider) => {
-    return ajax(BASE + '/user/info?',
-        {
-            params: {
-                email: provider
-            }
-        }
-    )
-}
-
-export const acceptService = (adminKey,provider,service) => {
-    return ajax(BASE + '/service/acpt',
-    {
-        method: 'POST',
-        data:{
-            adminKey,
-            provider,
-            service
-        }
-    }
-    )
-}
-
-export const getunService = () => {
-    return ajax(BASE + '/service/unavailable',
-        {
-            params: {
-            }
-        }
-    )
-}
