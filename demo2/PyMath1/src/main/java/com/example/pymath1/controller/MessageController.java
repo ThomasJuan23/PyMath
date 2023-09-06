@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/public/Message")
 public class MessageController {
-
+  //websocket
     @Autowired
     private SimpMessagingTemplate simpMessagingTemplate;
 
@@ -36,7 +36,7 @@ public class MessageController {
 
     @Autowired
     private IdGeneratorService idGeneratorService;
-
+  //After a new question is raised, the administrator will be notified that a question needs to be added
     @PostMapping("/submitQuestion")
     public Result submitQuestion(
             @RequestParam String senderEmail,
@@ -50,7 +50,7 @@ public class MessageController {
         QueryWrapper<User> receiverWrapper = new QueryWrapper<>();
         receiverWrapper.eq("Email", receiverEmail);
         User receiver = userService.getOne(receiverWrapper);
-
+     //check the role of receiver and sender
         if (sender == null || receiver == null) {
             return Result.fail().message("Invalid sender or receiver email.");
         }
@@ -58,7 +58,7 @@ public class MessageController {
         if (!"teacher".equals(sender.getType()) || !"admin".equals(receiver.getType())) {
             return Result.fail().message("Sender should be a teacher and receiver should be an admin.");
         }
-
+  //get the threadid
         QueryWrapper<Message> threadWrapper = new QueryWrapper<>();
         threadWrapper.eq("Sender", senderEmail)
                 .eq("Receiver", receiverEmail)
@@ -73,7 +73,7 @@ public class MessageController {
         } else {
             nextThreadId = String.valueOf(Integer.parseInt(lastMessage.getThreadId()) + 1);
         }
-
+//save the message
         Message message = new Message();
         message.setSender(senderEmail);
         message.setReceiver(receiverEmail);
@@ -86,11 +86,11 @@ public class MessageController {
 
         return Result.ok().message("Question submitted successfully!");
     }
-
+     //Chat request from user to admin, create a thread
     @PostMapping("/createMessage")
     public Result createMessage(@RequestParam String senderEmail,
                                 @RequestParam String content) {
-
+        //check the data of the sender
         QueryWrapper<User> senderWrapper = new QueryWrapper<>();
         senderWrapper.eq("Email", senderEmail);
         User sender = userService.getOne(senderWrapper);
@@ -100,6 +100,7 @@ public class MessageController {
         if(adminList.isEmpty()){
             return Result.fail().message("No admin found to assign the question");
         }
+        //random choose a admin to be the receiver
         User randomAdmin = adminList.get(new Random().nextInt(adminList.size()));
         String receiverEmail = randomAdmin.getEmail();
         QueryWrapper<User> receiverWrapper = new QueryWrapper<>();
@@ -132,6 +133,7 @@ public class MessageController {
         return Result.ok(threadId).message("Message successfully created");
     }
 
+    //Reply to an existing chat thread
     @PostMapping("/replyMessage")
     public Result replyMessage(
             @RequestParam String sender,
@@ -171,7 +173,6 @@ public class MessageController {
                 .last("LIMIT 1");
         Message message1 = messageService.getOne(messageQueryWrapper);
         if (isSaved) {
-            System.out.println(receiver);
             simpMessagingTemplate.convertAndSend("/topic/replies", message1);
             return Result.ok(message1.getCreateTime()).message("Message replied successfully.");
         } else {
@@ -184,18 +185,17 @@ public class MessageController {
         private long total;
         private long size;
         private long current;
-        private List<OrderItem> orders; // 根据您的需求定义Order
+        private List<OrderItem> orders;
         private boolean hitCount;
         private boolean searchCount;
         private long pages;
         private List<T> records;
 
-        // Getter 和 Setter 省略
     }
 
     @GetMapping("/getMessageByReceiver")
     public Result<PagedResponse<Message>> getMessageByReceiver(@RequestParam long current, @RequestParam String email) {
-        // 首先，得到每个thread_Id的最新的change_Time
+        // First, get the latest change_Time for each thread_Id
         Page<Map<String, Object>> page = new Page<>(current,5);
         Page<Map<String, Object>> latestChanges = messageService.pageMaps(page,new QueryWrapper<Message>()
                 .select("thread_Id", "MAX(change_Time) as latestChangeTime")
@@ -205,7 +205,7 @@ public class MessageController {
 
         List<Map<String, Object>> changesList = latestChanges.getRecords();
 
-        // 然后，利用上面得到的信息，查询具体的消息
+        // Then, using the information obtained above, query for specific messages.
         List<Message> messages = new ArrayList<>();
         for (Map<String, Object> change : changesList) {
             Message message = messageService.getOne(new QueryWrapper<Message>()
@@ -230,7 +230,7 @@ public class MessageController {
         return Result.ok(response);
     }
 
-
+  // Get all chat records related to this thread
     @GetMapping("/getMessageByThread")
     public Result getMessagesByThreadId(@RequestParam long current, @RequestParam String threadId) {
         Page<Message> page = new Page<>(current,5);
@@ -245,43 +245,43 @@ public class MessageController {
         return Result.ok(messages);
     }
 
-    @DeleteMapping("/DeleteByQuestion")
-    public Result deleteMessagesByQuestionId(@RequestParam String questionId) {
-        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("Question_Id", questionId);
-
-        boolean isDeleted = messageService.remove(queryWrapper);
-
-        if (!isDeleted) {
-            return Result.fail().message("Failed to delete messages for the given questionId");
-        }
-        return Result.ok().message("Messages deleted successfully");
-    }
-
-    @DeleteMapping("/DeleteById")
-    public Result deleteMessageById(@RequestParam String id) {
-        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("Id", id);
-
-        boolean isDeleted = messageService.remove(queryWrapper);
-
-        if (!isDeleted) {
-            return Result.fail().message("Failed to delete the message for the given id");
-        }
-        return Result.ok().message("Message deleted successfully");
-    }
-
-    @DeleteMapping("/DeleteByThreadId")
-    public Result deleteMessagesByThreadId(@RequestParam String threadId) {
-        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("Thread_Id", threadId); // 注意是ThareadId，因为在你提供的Message类中是这样命名的
-
-        boolean isDeleted = messageService.remove(queryWrapper);
-
-        if (!isDeleted) {
-            return Result.fail().message("Failed to delete messages for the given threadId");
-        }
-        return Result.ok().message("Messages deleted successfully");
-    }
+//    @DeleteMapping("/DeleteByQuestion")
+//    public Result deleteMessagesByQuestionId(@RequestParam String questionId) {
+//        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.eq("Question_Id", questionId);
+//
+//        boolean isDeleted = messageService.remove(queryWrapper);
+//
+//        if (!isDeleted) {
+//            return Result.fail().message("Failed to delete messages for the given questionId");
+//        }
+//        return Result.ok().message("Messages deleted successfully");
+//    }
+//
+//    @DeleteMapping("/DeleteById")
+//    public Result deleteMessageById(@RequestParam String id) {
+//        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.eq("Id", id);
+//
+//        boolean isDeleted = messageService.remove(queryWrapper);
+//
+//        if (!isDeleted) {
+//            return Result.fail().message("Failed to delete the message for the given id");
+//        }
+//        return Result.ok().message("Message deleted successfully");
+//    }
+//
+//    @DeleteMapping("/DeleteByThreadId")
+//    public Result deleteMessagesByThreadId(@RequestParam String threadId) {
+//        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.eq("Thread_Id", threadId); // 注意是ThareadId，因为在你提供的Message类中是这样命名的
+//
+//        boolean isDeleted = messageService.remove(queryWrapper);
+//
+//        if (!isDeleted) {
+//            return Result.fail().message("Failed to delete messages for the given threadId");
+//        }
+//        return Result.ok().message("Messages deleted successfully");
+//    }
 
 }

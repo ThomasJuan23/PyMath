@@ -35,19 +35,20 @@ public class HistoryController {
     @Autowired
     private UserService userService;
 
+    //Return to the front-end history list based on the filter items selected by the user
     @GetMapping("/getHistoryList")
     public Result getHistoryList(@RequestParam long current, @RequestParam String emailAddress, @RequestParam(required = false) String Type, @RequestParam(required = false) String start, @RequestParam(required = false) String end){
         Page<History> page = new Page<>(current,5);
         QueryWrapper<History> emailQuery = new QueryWrapper<>();
         emailQuery.eq("Email", emailAddress);
         if(start!=null && end!=null) {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd"); // 根据实际日期格式进行调整
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             try {
                 Date startDate = format.parse(start);
                 Date endDate = format.parse(end);
-                emailQuery.between("change_time", startDate, endDate);  // 使用BETWEEN进行时间范围查询
+                emailQuery.between("change_time", startDate, endDate);  // use between to query a internal
             } catch (ParseException e) {
-                e.printStackTrace();// 可以选择返回一个错误响应，或者继续其他处理
+                e.printStackTrace();// address exception
             }
         }
         if(Type!=null){
@@ -57,6 +58,8 @@ public class HistoryController {
         return Result.ok(list);
     }
 
+    //Based on the student's selection of filter items and historical records, a unique sorting method is used to
+    // return the question type table displayed to the student end.
     @GetMapping("/getQuestionsByPage")
     public Result getQuestionsByPage(
             @RequestParam long current,
@@ -71,17 +74,18 @@ public class HistoryController {
             userQueryWrapper.last("LIMIT 1");
             User user = userService.getOne(userQueryWrapper);
             LocalDate birthDate =user.getBirthday();
+            //Step 1:calculate the actual age group according to the birthday of the user in real time
             LocalDate currentDate = LocalDate.now();
             Period agePeriod = Period.between(birthDate, currentDate);
             String ageGroup;
             if (agePeriod.getYears() < 14 || (agePeriod.getYears() == 14 && agePeriod.getMonths() < 6)) {
-                ageGroup = "11-14";  // 14岁以下
+                ageGroup = "11-14";  // Below 14
             } else if (agePeriod.getYears() < 16 || (agePeriod.getYears() == 16 && agePeriod.getMonths() < 6)) {
-                ageGroup = "14-16";  // 14到16岁
+                ageGroup = "14-16";
             } else {
-                ageGroup = "16-18";  // 16到18岁
+                ageGroup = "16-18";
             }
-            // Step 1: Get distinct types for the given age group and filters
+            // Step 2: Get distinct types for the given age group and filters
             QueryWrapper<Question> typeQueryWrapper = new QueryWrapper<>();
             typeQueryWrapper.isNotNull("Answer")
                     .eq("age_Group", ageGroup);
@@ -100,7 +104,7 @@ public class HistoryController {
                     .distinct()
                     .collect(Collectors.toList());
 
-            // Step 2: Get questions for each type and assemble the final page
+            // Step 3: Get questions for each type and assemble the final page
             List<Question> pageQuestions = new ArrayList<>();
             for (String type : types) {
                 String questionId = getLastQuestion(email, type);
@@ -131,8 +135,9 @@ public class HistoryController {
 
 
 
-
+   //get the newest question of one type that user answered
     private String getLastQuestion(String email, String type) {
+        //Step1: get the history object to get the question id
         QueryWrapper<History> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("Type", type)
                 .eq("Email", email)
@@ -144,7 +149,7 @@ public class HistoryController {
         if (history != null && !history.getQuestionId().isEmpty()) {
             return history.getQuestionId();
         }
-
+//Step2: get the question object
         QueryWrapper<Question> questionQueryWrapper = new QueryWrapper<>();
         questionQueryWrapper.eq("Type", type)
                 .eq("level", 1)
@@ -161,7 +166,7 @@ public class HistoryController {
         return questionService.getById(questionId);
     }
 
-
+    // add the answer history to the database
     @PostMapping("/addHistory")
     public Result addHistory(@RequestParam String email, @RequestParam String Question_Id, @RequestParam(required = false) String Answer, @RequestParam String Feedback, @RequestParam String Type){
         History history = new History();

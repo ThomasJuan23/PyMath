@@ -26,20 +26,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/**").permitAll()  // 公开访问的端点
-                .anyRequest().authenticated()          // 其他所有请求都需要身份验证
+                .antMatchers("/public/**", "/topic/**").permitAll()  // the port of public accessing
+                .anyRequest().authenticated()          // Need Authenticated
                 .and()
-                .formLogin()                               // 启用默认的登录表单
+                .formLogin()
                 .and()
-                .httpBasic();                              // 启用基本身份验证
+                .httpBasic();
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth
                 .inMemoryAuthentication()
-                .withUser("admin")
-                .password(passwordEncoder.encode("12345"))
+                .withUser("admin")   //login username
+                .password(passwordEncoder.encode("12345"))  //login password
                 .roles("USER");
     }
 

@@ -5,23 +5,23 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
- * 全局统一返回结果类
+ * Global unified response format
  */
 @Data
-@ApiModel(value = "全局统一返回结果")
+@ApiModel(value = "Global unified response format")
 public class Result<T> {
 
-    @ApiModelProperty(value = "返回码")
+    @ApiModelProperty(value = "Code")
     private Integer code;
 
-    @ApiModelProperty(value = "返回消息")
+    @ApiModelProperty(value = "Message")
     private String message;
 
-    @ApiModelProperty(value = "返回数据")
+    @ApiModelProperty(value = "Data")
     private T data;
 
     public Result(){}
-
+  /// Utility method for building a Result object with data
     protected static <T> Result<T> build(T data) {
         Result<T> result = new Result<T>();
         if (data != null)
@@ -29,6 +29,8 @@ public class Result<T> {
         return result;
     }
 
+
+    // Build Result with data and a ResultCodeEnum
     public static <T> Result<T> build(T body, ResultCodeEnum resultCodeEnum) {
         Result<T> result = build(body);
         result.setCode(resultCodeEnum.getCode());
@@ -36,6 +38,7 @@ public class Result<T> {
         return result;
     }
 
+    // Build Result with specific code and message
     public static <T> Result<T> build(Integer code, String message) {
         Result<T> result = build(null);
         result.setCode(code);
@@ -48,7 +51,7 @@ public class Result<T> {
     }
 
     /**
-     * 操作成功
+     * successful
      * @param data
      * @param <T>
      * @return
@@ -63,7 +66,7 @@ public class Result<T> {
     }
 
     /**
-     * 操作失败
+     * unsuccessful
      * @param data
      * @param <T>
      * @return

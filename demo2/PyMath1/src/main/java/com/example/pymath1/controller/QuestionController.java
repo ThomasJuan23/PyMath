@@ -44,9 +44,10 @@ public class QuestionController {
     @Autowired
     private MessageService messageService;
 
+    //Verify whether the user's answer results are consistent with the answer
     @PutMapping("/verifyAnswer")
     public Result verifyAnswer(@RequestParam String code, @RequestParam String questionID) {
-        // 1. 通过questionID获取答案
+        // 1. get the answer by question id
         Question question = getQuestion(questionID);
         if (question == null) {
             return Result.fail().message("Question not found.");
@@ -58,13 +59,13 @@ public class QuestionController {
         }
 
         try {
-            // 2. 执行用户提供的代码
+            // 2. execute the code user input
             String userOutput = codeExecutionService.executeCode(code);
 
-            // 3. 执行数据库中的答案代码
+            // 3. execute the code of answer
             String answerOutput = codeExecutionService.executeCode(answerCode);
 
-            // 4. 比较两个输出
+            // 4. compare the output
             if (userOutput.equals(answerOutput)) {
                 return Result.ok(userOutput).message("Execution is correct!");
             } else {
@@ -75,12 +76,12 @@ public class QuestionController {
             return Result.fail().message("An error occurred during code execution: " + e.getMessage());
         }
     }
-
+  //Test code used to answer questions or provide questions
     @PutMapping("/runCode")
     public Result runAnswer(@RequestParam String code) {
 
         try {
-            // 2. 执行用户提供的代码
+            // Execute the code
             String userOutput = codeExecutionService.executeCode(code);
             return Result.ok(userOutput).message("Execution is correct!");
 
@@ -88,7 +89,7 @@ public class QuestionController {
             return Result.fail().message("An error occurred during code execution: " + e.getMessage());
         }
     }
-
+   //provide the answer of a question
     @PostMapping("/provideAnswer")
     public Result provideAnswer(
             @RequestParam String questionID,
@@ -97,7 +98,7 @@ public class QuestionController {
             @RequestParam String adminPass,
             @RequestParam(required = false) String answerExplain) {
 
-        // 检查管理员凭据
+        // Check for administrator identity
         QueryWrapper<User> adminQuery = new QueryWrapper<>();
         adminQuery.eq("Email", adminEmail);
         User adminUser = userService.getOne(adminQuery);
@@ -105,21 +106,21 @@ public class QuestionController {
             return getMessage();
         }
 
-        // 获取问题实体
+        // get the object of question
         Question questionToUpdate = getQuestion(questionID);
         if (questionToUpdate == null) {
             return Result.fail().message("Question not found.");
         }
 
-        // 更新问题的答案
+        // update the answer
         questionToUpdate.setAnswer(answer);
 
-        // 如果提供了答案解释，则更新
+        // update the explain
         if (answerExplain != null && !answerExplain.trim().isEmpty()) {
             questionToUpdate.setAnswerExplain(answerExplain);
         }
 
-        // 保存更新
+        // save answer
         if (questionService.updateById(questionToUpdate)) {
             return Result.ok().message("Answer provided successfully.");
         } else {
@@ -127,7 +128,7 @@ public class QuestionController {
         }
     }
 
-
+  // Teacher add a new question
     @PostMapping("/addQuestion")
     public Result addQuestion(
             @RequestParam String question,
@@ -136,17 +137,17 @@ public class QuestionController {
             @RequestParam String ageGroup,
             @RequestParam String email) {
 
-        // 检查必要的参数是否为空
+        // Check null
         if (question == null || level == null || type == null || ageGroup == null || email == null) {
             return Result.fail().message("All fields are required.");
         }
 
-        // 校验email格式
+        // check the email format
         if (!isValidEmail(email)) {
             return Result.fail().message("Invalid email format.");
         }
 
-        // 检查email是否存在于User数据库中且type为teacher
+        //check the role of the email
         QueryWrapper<User> userQuery = new QueryWrapper<>();
         userQuery.eq("Email", email);
         User user = userService.getOne(userQuery);
@@ -159,7 +160,7 @@ public class QuestionController {
             return Result.fail().message("Only teachers can add questions.");
         }
 
-        // 创建一个新的Question对象并设置其属性
+        // create a question object
         Question newQuestion = new Question();
         newQuestion.setQuestion(question);
         newQuestion.setLevel(level);
@@ -167,7 +168,7 @@ public class QuestionController {
         newQuestion.setAgeGroup(ageGroup);
         newQuestion.setEmail(email);
 
-        // 使用MyBatis-Plus的服务来保存问题
+        // save the question
         if (questionService.save(newQuestion)) {
             QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
             userQueryWrapper.eq("Type","admin");
@@ -188,7 +189,7 @@ public class QuestionController {
             Question q = questionService.getOne(questionQueryWrapper);
             String questionId = q.getId(); // Assuming the Question entity has an ID field
 
-            // 调用submitQuestion逻辑
+            // submit a new question request message
             QueryWrapper<User> senderWrapper = new QueryWrapper<>();
             senderWrapper.eq("Email", email);
             User sender = userService.getOne(senderWrapper);
@@ -204,7 +205,7 @@ public class QuestionController {
             if (!"teacher".equals(sender.getType()) || !"admin".equals(receiver.getType())) {
                 return Result.fail().message("Sender should be a teacher and receiver should be an admin.");
             }
-
+           //get the threadid
             QueryWrapper<Message> threadWrapper = new QueryWrapper<>();
             threadWrapper.eq("Sender", email)
                     .eq("Receiver", receiverEmail)
@@ -236,13 +237,13 @@ public class QuestionController {
         }
     }
 
-    // Email格式验证的辅助方法
+    // Check email format
     private boolean isValidEmail(String email) {
         String regex = "^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}$";
         return email != null && email.matches(regex);
     }
 
-
+  //Edit the answer of a question
     @PutMapping("/editAnswer")
     public Result editAnswer(
             @RequestParam String questionID,
@@ -251,7 +252,7 @@ public class QuestionController {
             @RequestParam String adminPass,
             @RequestParam(required = false) String answerExplain) {
 
-        // 检查管理员凭据
+        // Check for administrator identity
         QueryWrapper<User> adminQuery = new QueryWrapper<>();
         adminQuery.eq("Email", adminEmail);
         User adminUser = userService.getOne(adminQuery);
@@ -259,34 +260,31 @@ public class QuestionController {
             return getMessage();
         }
 
-        // 获取问题实体
+        // get the question object
         Question questionToUpdate = getQuestion(questionID);
         if (questionToUpdate == null) {
             return Result.fail().message("Question not found.");
         }
 
-        // 如果提供了新答案，则更新
         if (answer != null && !answer.trim().isEmpty()) {
             questionToUpdate.setAnswer(answer);
         }
 
-        // 如果提供了答案解释，则更新
         if (answerExplain != null && !answerExplain.trim().isEmpty()) {
             questionToUpdate.setAnswerExplain(answerExplain);
         }
 
-        // 保存更新
         if (questionService.updateById(questionToUpdate)) {
             return Result.ok().message("Answer edited successfully.");
         } else {
             return Result.fail().message("Failed to edit answer.");
         }
     }
-
+  //The creator and the admin can delete a question by this AP
     @DeleteMapping("/deleteQuestion")
     public Result deleteQuestion(@RequestParam String email, @RequestParam String questionId) {
 
-        // 根据邮箱获取User
+        // get the user object
         QueryWrapper<User> userQuery = new QueryWrapper<>();
         userQuery.eq("Email", email);
         User user = userService.getOne(userQuery);
@@ -295,7 +293,7 @@ public class QuestionController {
             return Result.fail().message("Invalid email.");
         }
 
-        // 根据questionId获取Question
+        // get the question object
         QueryWrapper<Question> questionQuery = new QueryWrapper<>();
         questionQuery.eq("Id", questionId);
         Question question = questionService.getOne(questionQuery);
@@ -304,9 +302,9 @@ public class QuestionController {
             return Result.fail().message("Question not found.");
         }
 
-        // 检查权限
+        // Check for administrator identity
         if (email.equals(question.getEmail()) || "admin".equalsIgnoreCase(user.getType())) {
-            // 允许删除操作
+            // Can delete
             if (questionService.removeById(questionId)) {
                 return Result.ok().message("Question deleted successfully.");
             } else {
@@ -317,34 +315,7 @@ public class QuestionController {
         }
     }
 
-//    @GetMapping("/getUserQuestionList")
-//    public Result getUserQuestionList(@RequestParam long current, @RequestParam(required = false) String type, @RequestParam String ageGroup, @RequestParam(required = false) String startDate, @RequestParam(required = false) String endDate) {
-//        Page<Question> page = new Page<>(current,5);
-//        QueryWrapper<Question> questionQuery = new QueryWrapper<>();
-//        if(startDate!=null && endDate!=null) {
-//            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd"); // 根据实际日期格式进行调整
-//            try {
-//                Date start = format.parse(startDate);
-//                Date end = format.parse(endDate);
-//                questionQuery.between("change_time", start, end);  // 使用BETWEEN进行时间范围查询
-//            } catch (ParseException e) {
-//                e.printStackTrace();// 可以选择返回一个错误响应，或者继续其他处理
-//            }
-//        }
-//        questionQuery.eq("level", "1");  // 查询 level = 1 的问题
-//        if (type != null && !type.isEmpty()) {
-//            questionQuery.eq("Type", type);  // 如果type有值，根据type过滤
-//        }
-//        questionQuery.eq("Age_Group", ageGroup);  // 根据ageGroup过滤
-//
-//        Page<Question> questions = questionService.page(page,questionQuery);
-//
-//        if (questions != null) {
-//            return Result.ok(questions);
-//        } else {
-//            return Result.fail().message("No questions found.");
-//        }
-//    }
+    //get all types by age group
     @GetMapping("/getTypesByAgeGroup")
     public Result getTypesByAgeGroup(@RequestParam String AgeGroup,@RequestParam(required = false) String startDate,
                                      @RequestParam(required = false) String endDate, @RequestParam(required = false) String Type){
@@ -352,19 +323,19 @@ public class QuestionController {
         queryWrapper.isNotNull("Answer");
         queryWrapper.eq("age_Group", AgeGroup);
         if(startDate!=null && endDate!=null) {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd"); // 根据实际日期格式进行调整
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             try {
                 Date start = format.parse(startDate);
                 Date end = format.parse(endDate);
-                queryWrapper.between("change_time", start, end);  // 使用BETWEEN进行时间范围查询
+                queryWrapper.between("change_time", start, end);
             } catch (ParseException e) {
-                e.printStackTrace();// 可以选择返回一个错误响应，或者继续其他处理
+                e.printStackTrace();
             }
         }
         queryWrapper.like("Type",Type);
         List<Question> questions = questionService.list(queryWrapper);
         if (questions != null && !questions.isEmpty()) {
-            // 使用Java 8的流从问题列表中提取独特的"type"值
+            // Using Java 8 streams to extract unique 'type' values from the list of questions
             List<String> uniqueTypes = questions.stream()
                     .map(Question::getType)
                     .distinct()
@@ -375,7 +346,7 @@ public class QuestionController {
             return Result.fail().message("No types found.");
         }
     }
-
+//Get the previous question specific to a student who is doing this question
     @GetMapping("/getBeforeQuestion")
     public Result getBeforeQuestion(@RequestParam String email, @RequestParam String questionId) {
         try {
@@ -386,17 +357,19 @@ public class QuestionController {
             if (user == null) {
                 return Result.fail().message("User not found");
             }
+            //get the actual age group
             LocalDate birthDate =user.getBirthday();
             LocalDate currentDate = LocalDate.now();
             Period agePeriod = Period.between(birthDate, currentDate);
             String ageGroup;
             if (agePeriod.getYears() < 14 || (agePeriod.getYears() == 14 && agePeriod.getMonths() < 6)) {
-                ageGroup = "11-14";  // 14岁以下
+                ageGroup = "11-14";
             } else if (agePeriod.getYears() < 16 || (agePeriod.getYears() == 16 && agePeriod.getMonths() < 6)) {
-                ageGroup = "14-16";  // 14到16岁
+                ageGroup = "14-16";
             } else {
-                ageGroup = "16-18";  // 16到18岁
+                ageGroup = "16-18";
             }
+            //get the question object
             Question question = questionService.getById(questionId);
             if (question == null) {
                 return Result.fail().message("Question not found");
@@ -404,7 +377,7 @@ public class QuestionController {
             String type = question.getType();
             String level = question.getLevel();
             Date changeTime = question.getChangeTime();
-
+       //get the previous question
             String questionID = "";
             int i = 0;
             while (questionID.isEmpty()) {
@@ -436,7 +409,7 @@ public class QuestionController {
     }
 
 
-
+  //Get the next question specific to a student who is doing this question
     @GetMapping("/getAfterQuestion")
     public Result getAfterQuestion(@RequestParam String email, @RequestParam String questionId){
         try {
@@ -452,11 +425,11 @@ public class QuestionController {
             Period agePeriod = Period.between(birthDate, currentDate);
             String ageGroup;
             if (agePeriod.getYears() < 14 || (agePeriod.getYears() == 14 && agePeriod.getMonths() < 6)) {
-                ageGroup = "11-14";  // 14岁以下
+                ageGroup = "11-14";
             } else if (agePeriod.getYears() < 16 || (agePeriod.getYears() == 16 && agePeriod.getMonths() < 6)) {
-                ageGroup = "14-16";  // 14到16岁
+                ageGroup = "14-16";
             } else {
-                ageGroup = "16-18";  // 16到18岁
+                ageGroup = "16-18";
             }
             Question question = questionService.getById(questionId);
             if (question == null) {
@@ -496,12 +469,14 @@ public class QuestionController {
         }
     }
 
+    //get the distinct types of all questions to be an option filter
+
     @GetMapping("/getDistinctTypes")
     public Result getDistinctTypes() {
         List<Question> questions = questionService.list();
 
         if (questions != null && !questions.isEmpty()) {
-            // 使用Java 8的流从问题列表中提取独特的"type"值
+            // Using Java 8 streams to extract unique 'type' values from the list of questions
             List<String> uniqueTypes = questions.stream()
                     .map(Question::getType)
                     .distinct()
@@ -512,7 +487,7 @@ public class QuestionController {
             return Result.fail().message("No types found.");
         }
     }
-
+   //Get a list of questions based on filter criteria
     @GetMapping("/getQuestions")
     public Result getQuestions(
             @RequestParam long current,
@@ -526,16 +501,16 @@ public class QuestionController {
             @RequestParam(required = false) String endDate
             ) {
 
-        // 使用QueryWrapper构建查询条件
+        // use querywappper to query
         QueryWrapper<Question> questionQuery = new QueryWrapper<>();
         if(startDate!=null && endDate!=null) {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd"); // 根据实际日期格式进行调整
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             try {
                 Date start = format.parse(startDate);
                 Date end = format.parse(endDate);
-                questionQuery.between("change_time", start, end);  // 使用BETWEEN进行时间范围查询
+                questionQuery.between("change_time", start, end);
             } catch (ParseException e) {
-                e.printStackTrace();// 可以选择返回一个错误响应，或者继续其他处理
+                e.printStackTrace();
             }
         }
 
@@ -544,7 +519,7 @@ public class QuestionController {
         }
 
         if (questionContent != null && !questionContent.trim().isEmpty()) {
-            questionQuery.like("Question", questionContent);  // 使用LIKE进行模糊匹配
+            questionQuery.like("Question", questionContent);  // Using LIKE for fuzzy matching
         }
 
         if (type != null && !type.trim().isEmpty()) {
@@ -577,7 +552,7 @@ public class QuestionController {
             return Result.fail().message("No questions found.");
         }
     }
-
+  //Using LIKE for fuzzy matching
     @PutMapping("/editQuestion")
     public Result editQuestion(
             @RequestParam String email,
@@ -587,7 +562,7 @@ public class QuestionController {
             @RequestParam(required = false) String ageGroup,
             @RequestParam(required = false) String level) {
 
-        // 根据邮箱获取User
+        // get the user object
         QueryWrapper<User> userQuery = new QueryWrapper<>();
         userQuery.eq("Email", email);
         User user = userService.getOne(userQuery);
@@ -596,7 +571,7 @@ public class QuestionController {
             return Result.fail().message("Invalid email.");
         }
 
-        // 根据questionId获取Question
+        // get the question object
         QueryWrapper<Question> questionQuery = new QueryWrapper<>();
         questionQuery.eq("Id", questionId);
         Question questionToUpdate = questionService.getOne(questionQuery);
@@ -605,12 +580,12 @@ public class QuestionController {
             return Result.fail().message("Question not found.");
         }
 
-        // 检查权限
+        // check the role
         if (!email.equals(questionToUpdate.getEmail()) && !"admin".equalsIgnoreCase(user.getType())) {
             return Result.fail().message("Permission denied.");
         }
 
-        // 根据提供的参数进行更新
+        // update the question object
         if (question != null && !question.trim().isEmpty()) {
             questionToUpdate.setQuestion(question);
         }
@@ -627,7 +602,7 @@ public class QuestionController {
             questionToUpdate.setLevel(level);
         }
 
-        // 使用MyBatis-Plus的服务来保存问题
+        //save the updated question
         if (questionService.updateById(questionToUpdate)) {
             return Result.ok().message("Question updated successfully.");
         } else {

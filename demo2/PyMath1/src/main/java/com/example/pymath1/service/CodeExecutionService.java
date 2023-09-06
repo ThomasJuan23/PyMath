@@ -9,16 +9,17 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CodeExecutionService {
-
+  //get key from application.properties
     @Value("${rapidapi.key}")
     private String rapidapiKey;
-
+    //get host from application.properties
     @Value("${rapidapi.host}")
     private String rapidapiHost;
     public String executeCode(String code) throws Exception {
         final String ENCODING = "UTF-8";
-        // 使用Apache Commons Codec进行Base64编码
+        // Base64 encoding using Apache Commons Codec
         String encodedCode = new String(Base64.encodeBase64(code.getBytes(ENCODING)), ENCODING);
+        //create a submission request
         HttpResponse<JsonNode> response = Unirest.post("https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&fields=*")
                 .header("content-type", "application/json")
                 .header("Content-Type", "application/json")
@@ -33,6 +34,7 @@ public class CodeExecutionService {
         int statusId;
         int maxAttempts = 20;
         int currentAttempt = 0;
+        //loop until the status of get a submission is finished
         do {
             Thread.sleep(200);
             response = Unirest.get("https://judge0-ce.p.rapidapi.com/submissions/" + submissionId + "?base64_encoded=true&fields=*")
@@ -48,10 +50,10 @@ public class CodeExecutionService {
         String output = response.getBody().getObject().optString("stdout");
         String error = response.getBody().getObject().optString("stderr");
         if (!output.isEmpty()) {
-            // 使用Apache Commons Codec进行Base64解码
+            // Base64 decoding using Apache Commons Codec
             return new String(Base64.decodeBase64(output), ENCODING);
         } else if (!error.isEmpty()) {
-            // 使用Apache Commons Codec进行Base64解码
+            // Base64 decoding using Apache Commons Codec
             error = new String(Base64.decodeBase64(error), ENCODING);
             return error;
         } else {

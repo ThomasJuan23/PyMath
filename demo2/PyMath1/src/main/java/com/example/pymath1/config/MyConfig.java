@@ -14,14 +14,15 @@ public class MyConfig {
     public OptimisticLockerInterceptor optimisticLockerInterceptor(){
         return new OptimisticLockerInterceptor();
     }
-
+    //optimistic locker configuration
     @Bean
     public PaginationInterceptor paginationInterceptor(){
         return  new PaginationInterceptor();
     }
-
+    // pagination configuration
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+    // encryption algorithm configuration
 }

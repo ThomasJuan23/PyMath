@@ -22,8 +22,8 @@ public class Swagger2Config {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("API文档")
-                .description("API接口文档")
+                .title("API Document")
+                .description("API Document")
                 .version("1.0")
                 .build();
     }

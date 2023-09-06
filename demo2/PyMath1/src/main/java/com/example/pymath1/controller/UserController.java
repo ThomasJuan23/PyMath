@@ -26,8 +26,6 @@ import java.util.regex.Pattern;
 @RequestMapping("/public/User")
 public class UserController {
 
-    private static final String CAPTCHA_KEY = "CAPTCHA_KEY";
-
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
@@ -39,33 +37,17 @@ public class UserController {
 
     @Autowired
     private EmailService emailService;
-//
-//    //1.查询用户表所有信息
-//    @GetMapping("findAll")
-//    public Result findAllUser(){
-//        List<User> list = userService.list();
-//        return Result.ok(list);
-//    }
-//
-//    @DeleteMapping("/delete{id}")
-//    public Result removeHospSet(@PathVariable String id){
-//        boolean flag = userService.removeById(id);
-//        if(flag){
-//            return Result.ok();
-//        } else {
-//            return Result.fail();
-//        }
-//    }
 
+  //Send an email verification code request
     @PutMapping("/send-email")
     public Result sendEmail(@RequestParam String emailAddress) {
         try {
-            // 验证电子邮件是否已存在于数据库中
+            // check if the email is existed
             QueryWrapper<User> emailQuery = new QueryWrapper<>();
             emailQuery.eq("Email", emailAddress);
             if (userService.count(emailQuery) > 0) {
                 return Result.fail().message("Email address already exists.");
-            }
+            } //generate the captcha
             String captcha = generateCaptcha();
             emailService.sendSimpleMessage(emailAddress, "Your Verification Code", "Your verification code is: " + captcha);
             Verify newVerify = new Verify();
@@ -79,12 +61,12 @@ public class UserController {
     }
 
 
-
+    //Verify the verification code entered by the user
     @PutMapping("/verify-email")
     public Result verifyEmail(@RequestParam String emailAddress, @RequestParam String userCaptcha) {
         QueryWrapper<Verify> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("email", emailAddress)
-                .orderByDesc("Create_Time")  // 按 create_time 降序排列
+                .orderByDesc("Create_Time")  // order by create time
                 .last("LIMIT 1");
         Verify verify = verifyService.getOne(queryWrapper);
 
@@ -100,7 +82,7 @@ public class UserController {
         }
     }
 
-
+  //Verify login information
     @PutMapping("/login")
     public Result loginUser(@RequestParam String email, @RequestParam String password) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -121,7 +103,7 @@ public class UserController {
     }
 
 
-
+  //register a new user
     @PostMapping("/register")
     public Result postRegister(
             @RequestParam String email,
@@ -136,13 +118,13 @@ public class UserController {
             @RequestParam String safeQ,
             @RequestParam String safeA) {
 
-        // 检查必要的参数是否为空
+        // check null
         if (email == null || username == null || role == null || password == null ||
                 birthday == null || safeQ == null || safeA == null) {
             return Result.fail().message("Required parameters are missing.");
         }
 
-        // 检查邮箱是否已存在
+        // check double email
         QueryWrapper<User> emailQuery = new QueryWrapper<>();
         emailQuery.eq("Email", email);
         if (userService.count(emailQuery) > 0) {
@@ -153,12 +135,12 @@ public class UserController {
             return Result.fail().message("Invalid email format.");
         }
 
-        // 验证角色
+        // check role valid
         if (!"teacher".equalsIgnoreCase(role) && !"student".equalsIgnoreCase(role)&& !"admin".equalsIgnoreCase(role)) {
             return Result.fail().message("Invalid user role.");
         }
 
-        // 尝试解析生日日期
+        // get the birthday
         LocalDate parsedBirthday;
         try {
             parsedBirthday = LocalDate.parse(birthday);
@@ -166,7 +148,7 @@ public class UserController {
             return Result.fail().message("Invalid birthday format.");
         }
 
-        // 存储新用户
+        // save the new user
         User newUser = new User();
         newUser.setEmail(email);
         newUser.setUserName(username);
@@ -194,7 +176,7 @@ public class UserController {
         Matcher matcher = pattern.matcher(email);
         return matcher.matches();
     }
-
+   //eturn the safe question of a user
     @GetMapping("safequestion")
     public Result getSafeQuestion(@RequestParam String email){
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -202,28 +184,28 @@ public class UserController {
         User user = userService.getOne(queryWrapper);
         return Result.ok(user.getSafeQuestion());
     }
-
+  //Verify the safe answer of a use
     @PostMapping("/verifysafeanswer")
     public Result verifySafeAnswer(
             @RequestParam String email,
             @RequestParam String userSafeAnswer) {
 
-        // 检查是否提供了所有必要的参数
+        // check null
         if (email == null || userSafeAnswer == null) {
             return Result.fail().message("Required fields cannot be null.");
         }
 
-        // 使用email检索用户
+        // get the user object
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("Email", email);
         User user = userService.getOne(queryWrapper);
 
-        // 检查用户是否存在
+        // check if user exist
         if (user == null) {
             return Result.fail().message("User not found");
         }
 
-        // 检查SafeAnswer是否匹配
+        // compare the safe answer
         if (passwordEncoder.matches(userSafeAnswer,user.getSafeAnswer())) {
             return Result.ok().message("Safe answer is correct.");
         } else {
@@ -231,6 +213,7 @@ public class UserController {
         }
     }
 
+    //change a password of a user
     @PutMapping("/changepassword")
     public Result changePassword(@RequestParam String email, @RequestParam String newPassword) {
         QueryWrapper<User> emailQuery = new QueryWrapper<>();
@@ -250,7 +233,7 @@ public class UserController {
             return Result.fail().message("Password change failed.");
         }
     }
-
+  //Edit personal information on the user end
     @PutMapping("/changeinfouserend")
     public Result changeInfoUserend(
             @RequestParam String email,
@@ -289,7 +272,7 @@ public class UserController {
             return Result.fail().message("User info update failed.");
         }
     }
-
+  //change the safe question and safe answer of a user
     @PutMapping("/changeinfoadminend")
     public Result changeInfoAdminend(
             @RequestParam String email,
@@ -298,7 +281,7 @@ public class UserController {
             @RequestParam String adminEmail,
             @RequestParam String adminPass) {
 
-        // 验证管理员身份
+        // check the password of admin
         QueryWrapper<User> adminQuery = new QueryWrapper<>();
         adminQuery.eq("Email", adminEmail);
         User adminUser = userService.getOne(adminQuery);
@@ -306,7 +289,7 @@ public class UserController {
         if (adminUser == null || !passwordEncoder.matches(adminPass, adminUser.getPassword())) {
             return Result.fail().message("Invalid admin credentials.");
         }
-        // 判断是否是管理员
+        // check the role
         if (!"admin".equalsIgnoreCase(adminUser.getType())) {
             return Result.fail().message("User is not an admin.");
         }
@@ -337,19 +320,18 @@ public class UserController {
     public Result deleteUser(@RequestParam String email,
                              @RequestParam String adminEmail,
                              @RequestParam String adminPass) {
-        // 验证管理员的身份
+        // check the role of email
         QueryWrapper<User> adminQuery = new QueryWrapper<>();
         adminQuery.eq("Email", adminEmail);
         User adminUser = userService.getOne(adminQuery);
 
-        // 验证邮箱和密码以及管理员类型
         if (adminUser == null
                 || !passwordEncoder.matches(adminPass, adminUser.getPassword())
                 || !"admin".equals(adminUser.getType())) {  // 假设“type”字段是一个字符串，用于表示用户的类型，且管理员的值为"admin"
             return Result.fail().message("Invalid admin credentials.");
         }
 
-        // 删除指定的用户
+        // delete
         QueryWrapper<User> userQuery = new QueryWrapper<>();
         userQuery.eq("Email", email);
         if (userService.remove(userQuery)) {
