@@ -13,33 +13,33 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.cur$/,
+        test: /\.cur$/,   //address the cur file
         use: [
           {
             loader: 'file-loader',
             options: {
               name: '[name].[ext]',
-              outputPath: 'assets/images/', // 输出到images文件夹
-              publicPath: 'assets/images/', // 从public文件夹访问
+              outputPath: '/useradmin/assets/images/', 
+              publicPath: 'assets/images/', // input page
             },
           },
         ],
       },
       {
-        test: /\.(js|jsx)$/,
+        test: /\.(js|jsx)$/,  //address js or jsx file
         exclude: /node_modules/,
         use: 'babel-loader',
       },
       {
-        test: /\.css$/,
+        test: /\.css$/,  //address css file
         use: ['style-loader', 'css-loader'],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,   //address page file
         type: 'asset/resource',
       },
       {
-        test: /.ts$/,
+        test: /.ts$/,  //address ts file
         exclude: /node_modules/,
         loader: 'ts-loader'
       }
@@ -64,4 +64,5 @@ module.exports = {
         publicPath: '/', // the public URL of the output directory when referenced in a browser
       }),
   ],
+  // webpack.config.js
 };

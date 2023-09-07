@@ -8,7 +8,7 @@ const ResetPassword = () => {
   const [form] = Form.useForm();
   const [safeQuestion, setSafeQuestion] = useState('');
   const [canReset, setCanReset] = useState(false);
-
+ //get safe answer
   const fetchSafeQuestion = async (email) => {
     try {
       const response = await getSafeQuestion(email);
@@ -21,7 +21,7 @@ const ResetPassword = () => {
       message.error('Error fetching safe question.');
     }
   };
-
+// show the safe question
   const handleFetchQuestionClick = () => {
     const email = form.getFieldValue('email');
     if (email) {
@@ -30,7 +30,7 @@ const ResetPassword = () => {
       message.error('Please input your E-mail first!');
     }
   };
-
+  //handle safe answer 
   const onAnswerSubmit = async (email, answer) => {
     try {
       const response = await verifySafeAnswer(email, answer);
@@ -91,7 +91,7 @@ const ResetPassword = () => {
           >
             <Input />
           </Form.Item>
-
+{/* after input email, it shows */}
           {safeQuestion && (
             <Form.Item
               name="answer"
@@ -106,7 +106,7 @@ const ResetPassword = () => {
               <Input placeholder="Enter your answer" />
             </Form.Item>
           )}
-
+{/* after check safe answer, it shows */}
           {canReset && (
             <>
               <Form.Item

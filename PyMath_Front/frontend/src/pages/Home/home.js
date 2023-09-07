@@ -1,26 +1,24 @@
 import React, { useEffect, useRef } from 'react';
 import { Upload, Button, Form, Input, Select } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
-import ReactLive2d from 'react-live2d';
 import { Link } from 'react-router-dom';
 
 
 
 const { Option } = Select;
 
-
+//For testing purposes, a mock login routing page.
 
 export default function Home() {
 
   const handleUpload = (info) => {
     console.log(info.file);
-    // 在这里处理上传文件的逻辑
+
   }
 
 
   const handleFormSubmit = (values) => {
     console.log(values);
-    // 在这里处理表单提交的逻辑
+ 
   }
 
   return (

@@ -13,6 +13,7 @@ export default function QuestionDetail() {
         history.replace('/teacheradmin/teacherhome');
       };
 
+      //get questions
     useEffect(() => {
         const fetchQuestionAndUser = async () => {
             const id = storageUtils.getQuestion();

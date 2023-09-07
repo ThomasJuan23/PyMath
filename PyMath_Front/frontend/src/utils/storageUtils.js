@@ -1,4 +1,4 @@
-//操作local数据的工具函数模块
+//Utility module for handling local data
 const USER_KEY = 'user_key';
 const QUESTION_KEY = 'question_key';
 const MESSAGE_KEY = 'message_key';
@@ -10,7 +10,7 @@ export default {
         localStorage.setItem(USER_KEY, JSON.stringify(user))
     },
     getUser(){
-        return JSON.parse(localStorage.getItem(USER_KEY)) || {};//返回user对象或空
+        return JSON.parse(localStorage.getItem(USER_KEY)) || {};//return user object
 
     },
     removeUser(){
@@ -20,7 +20,7 @@ export default {
         localStorage.setItem(QUESTION_KEY,JSON.stringify(question))
     },
     getQuestion(){
-        return JSON.parse(localStorage.getItem(QUESTION_KEY)) || {};//返回user对象或空
+        return JSON.parse(localStorage.getItem(QUESTION_KEY)) || {};//return question object
     },
     removeQuestion(){
         localStorage.removeItem(QUESTION_KEY);
@@ -29,7 +29,7 @@ export default {
         localStorage.setItem(MESSAGE_KEY,JSON.stringify(message))
     },
     getMessage(){
-        return JSON.parse(localStorage.getItem(MESSAGE_KEY)) || {};//返回user对象或空
+        return JSON.parse(localStorage.getItem(MESSAGE_KEY)) || {};//return message object
     },
     removeMessage(){
         localStorage.removeItem(MESSAGE_KEY);
@@ -38,7 +38,7 @@ export default {
         localStorage.setItem(Thread_KEY,JSON.stringify(message))
     },
     getThread(){
-        return JSON.parse(localStorage.getItem(Thread_KEY)) || {};//返回user对象或空
+        return JSON.parse(localStorage.getItem(Thread_KEY)) || {};//return thread object
     },
     removeThread(){
         localStorage.removeItem(Thread_KEY);

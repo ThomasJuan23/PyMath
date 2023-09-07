@@ -13,11 +13,11 @@ export default function HomePage() {
     const [questions, setQuestions] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 5, total: 0 });
     const [filters, setFilters] = useState({searchText: null, start: null, end: null });
-
+   //get the answer history
     useEffect(() => {
         fetchQuestions();
     }, [filters, pagination]);
-
+   //handle fliter
     const handleSelectChange = (value) => {
         setFilters({ ...filters,  searchText: value });
         setPagination({ ...pagination, current: 1 });
@@ -38,11 +38,9 @@ export default function HomePage() {
           if (data.data.records) {
             const updatedQuestions = await Promise.all(
               data.data.records.map(async (record) => {
-                const questionId = record.questionId; // Assuming the property is named questionId
-                console.log(questionId)
+                const questionId = record.questionId;
                 const questionResponse = await getQuestions(1, questionId, null,null,null,null,null,null,null);
-                const question = questionResponse.data.records[0].question;
-                console.log(question)
+                const question = questionResponse.data.records[0].question;  //combine the hisotry object and question content
                 return {
                   ...record,
                   question: question
@@ -99,7 +97,7 @@ export default function HomePage() {
     return (
         <div style={{ padding: 24, minHeight: 600 }}>
             <h1>Questions List</h1>
-
+{/* fliter */}
             <div style={{ marginBottom: 16 }}>
                 <Search
                     placeholder="Search by Question Type"

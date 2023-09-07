@@ -19,7 +19,7 @@ const Home = () => {
   
     fetchQuestion();
   }, []);
-
+//get question
   const fetchQuestion = async () => {
     try {
       const result = await getQuestions(1, storageUtils.getQuestion(), null, null, null, null, null, null, null);
@@ -50,21 +50,22 @@ const Home = () => {
   const handleJoyrideCallback = (data) => {
     const { status } = data;
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      // 点击 "Skip" 或 "Done" 时，需要结束教程
+      // click skip or done , finish
       setRun(false);
     }
   };
 
 
 
-
+//verify the answer
 const handleFormSubmit = async () => {
-  const userAnswer = items.map((item) => item.content).join('\n');
+  const userAnswer = code;
   const result = await verifyAnswer(userAnswer, storageUtils.getQuestion());
 
   if (result.code === 200) {
     message.success(result.message);
     setOutput(result.data);
+    //add the history record
     const data = await addHistory(storageUtils.getUser(),storageUtils.getQuestion(),userAnswer,result.message+result.data,type);
     if(data.code === 200){
       handleNext();
@@ -77,6 +78,7 @@ const handleFormSubmit = async () => {
 };
 
 const handleNext = async() =>{
+  //get teh next question
   const nextdata = await getAfterQuestion(storageUtils.getUser(),storageUtils.getQuestion());
   if(nextdata.code === 200){
     const questionId = nextdata.data;
@@ -85,7 +87,7 @@ const handleNext = async() =>{
     }
     const result = await getQuestions(1, questionId, null, null, null, null, null, null, null);
     if (result.code === 200) {
-      storageUtils.saveQuestion(questionId);
+      storageUtils.saveQuestion(questionId);  //jump to different page according to the level
       const level = result.data.records[0].level;
       if(level==1)
       history.replace('/useradmin/dragexample')
@@ -149,9 +151,9 @@ const handlePrevious = async() =>{
           display: 'flex',
           justifyContent: 'space-between',
           marginBottom: '10px',
-          width: '100%', // 让整个 div 占满宽度
+          width: '100%', // full
           position: 'absolute',
-          top: 0, // 将 div 置于页面顶部
+          top: 0, 
         }}
       >
         <button
@@ -164,7 +166,7 @@ const handlePrevious = async() =>{
             cursor: 'pointer',
             zIndex: 10001,
           }}
-          disabled={previous === "first one"} // 设为不可点击状态
+          disabled={previous === "first one"} // unclickable when first
         >
           Previous
         </button>
@@ -178,7 +180,7 @@ const handlePrevious = async() =>{
             cursor: 'pointer',
             zIndex: 10001,
           }}
-          disabled={next === "last one"} // 设为不可点击状态
+          disabled={next === "last one"} // unclikable when last
         >
           Next
         </button>
@@ -186,7 +188,7 @@ const handlePrevious = async() =>{
 
       <h1>My Answer</h1>
 
-      <Form onFinish={handleFormSubmit} style={{ width: '400px', textAlign: 'center' }}>
+      <Form onFinish={handleFormSubmit} style={{ width: '400px' }}>
         <Form.Item label="Question" className='question-item'>
           <div>{question}</div>
         </Form.Item>
@@ -202,7 +204,7 @@ const handlePrevious = async() =>{
             }}
           />
         </Form.Item>
-        <Form.Item>
+        <Form.Item style={{textAlign: 'center'}}>
           <Button type="primary" htmlType="submit" className='submit-item'>Submit</Button>
         </Form.Item>
       </Form>

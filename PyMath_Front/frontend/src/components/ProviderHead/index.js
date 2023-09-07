@@ -1,9 +1,7 @@
 import React, { Component } from 'react'
 import { withRouter, Link } from "react-router-dom";
 import { Layout, Button, Modal, Badge } from "antd";
-import memoryUtils from '../../utils/memoryUtils';
 import storageUtils from '../../utils/storageUtils';
-import menuList from '../../config/menuConfig';
 import { getMessageByReceiver, createMessage } from '../../api/index';
 
 import {
@@ -11,23 +9,16 @@ import {
   ArrowLeftOutlined
 } from '@ant-design/icons';
 import './index.css'
-import { connect } from "react-redux";
 
 const { Header } = Layout;
 const { confirm } = Modal;
 
 class MHeader extends Component {
-  dataPreparation = () => {
-    let user = memoryUtils.user;
-    this.userEmail = user.email;
-    console.log('发到后端的客户邮箱' + this.userEmail);
-  }
 
   loadMessage = async () => {
     const result = await getMessageByReceiver(1,storageUtils.getUser())
     if (result.code === 200) {
       this.setState({ count: result.data.total });
-      console.log("看看长度" + this.state.count);
     }
   }
 
@@ -43,13 +34,13 @@ class MHeader extends Component {
     this.setState({ count: 0 });
     this.props.history.replace('/teacheradmin/message');
   }
-
+  //start a chat
   handlechat = async() =>{
     const data = await createMessage(storageUtils.getUser(),"Hello, Admin!");
     storageUtils.saveThread(data.data);
     this.props.history.replace('/teacheradmin/chat');
   }
-  
+  //back to the login page
   logout = () => {
     confirm({
       title: 'Confirm to logout？',
@@ -63,25 +54,12 @@ class MHeader extends Component {
     });
   }
 
-  getTitle = () => {
-    let title = '';
-    const path = this.props.location.pathname;
-    console.log(path);
-    menuList.forEach(item => {
-      if (item.key === path) {
-        title = item.title;
-      }
-    })
-    return title;
-  }
-
   load = () => {
     this.state.num = 5;
   }
 
   componentDidMount() {
     this.load();
-    this.dataPreparation();
     this.loadMessage();
   }
 
@@ -97,7 +75,7 @@ class MHeader extends Component {
               <Button onClick={this.logout}>log out</Button>
             </div>
             <div className='infoButton'>
-              {/* Existing Notification Button */}
+              {/* Notification Button */}
               <Badge
                 count={count}
                 size="small">

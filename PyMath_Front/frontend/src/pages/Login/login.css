@@ -4,8 +4,8 @@ html, body, #root {
 .login {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100%;
+  width: 100vw;  /* 充满整个视口宽度 */
+  height: 100vh;  /* 充满整个视口高度 */
   background-image: url('../../assets/images/bg.jpg');
   background-position: center;
   background-size: cover;

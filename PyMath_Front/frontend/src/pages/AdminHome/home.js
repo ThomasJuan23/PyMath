@@ -5,14 +5,14 @@ import { getDistinctTypes, getQuestions, editQuestion, deleteQuestion } from '..
 import storageUtils from '../../utils/storageUtils';
 const { Search } = Input;
 const { Option } = Select;
-const { RangePicker } = DatePicker;
+const { RangePicker } = DatePicker;  //DataPicker
 
 export default function HomePage() {
     const history = useHistory();
     const [editingKey, setEditingKey] = useState('');
     const [editingData, setEditingData] = useState({});
     const isEditing = (record) => record.id === editingKey;
-    const [distinctTypes, setDistinctTypes] = useState([]);
+    const [distinctTypes, setDistinctTypes] = useState([]);  //all types
     const [questions, setQuestions] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 5, total: 0 });
     const [filters, setFilters] = useState({
@@ -23,7 +23,7 @@ export default function HomePage() {
         hasAnswer: null,
         ageGroup: null // add this line
     });
-
+    //set age group
     const handleSelectAgeGroup = (value) => {
         setFilters({ ...filters, ageGroup: value });
         setPagination({ ...pagination, current: 1 });
@@ -31,7 +31,7 @@ export default function HomePage() {
 
 
     useEffect(() => {
-        (async () => {
+        (async () => {   //set the type selectors
             const types = await getDistinctTypes();
             if (types.code == 200)
                 setDistinctTypes(['All', ...types.data]);
@@ -45,14 +45,14 @@ export default function HomePage() {
         fetchQuestions();
     }, [filters, pagination]);
 
-
+  //get questions
     const fetchQuestions = async () => {
         const { searchText, selectedType, start, end, hasAnswer, ageGroup } = filters;
-        const apiType = selectedType === 'All' ? null : selectedType;
+        const apiType = selectedType === 'All' ? null : selectedType;  //all = no condition
         const data = await getQuestions(pagination.current, null, searchText, apiType, ageGroup, hasAnswer, null, start, end);
         if (data.code === 200) {
             if (data.data.records) {
-                // 添加 hasAnswer 字段
+                // get the value of hasAnswer by the answer attribute of record object
                 const updatedRecords = data.data.records.map(record => ({
                     ...record,
                     hasAnswer: record.answer !== null && record.answer !== ''
@@ -68,17 +68,18 @@ export default function HomePage() {
         }
     };
     
-
+   //jump to add answer page
     const handleAddAnswer = (record) => {
         storageUtils.saveQuestion(record.id);
         history.push('/admin/addanswer');
     };
-
+    
+    //jump to edit answer page
     const handleEditAnswer = (record) => {
         storageUtils.saveQuestion(record.id);
         history.push('/admin/editanswer');
     };
-
+    //set fliter
     const handlePageChange = (page) => {
         setPagination({ ...pagination, current: page });
     };
@@ -113,7 +114,7 @@ export default function HomePage() {
         {
             title: 'Question Content',
             dataIndex: 'question',
-            key: 'question',
+            key: 'question',    //Become input when click edit
             render: (text, record) => isEditing(record) ? (
                 <Input value={editingData.question}
                     onChange={e => setEditingData({ ...editingData, question: e.target.value })} />
@@ -159,7 +160,7 @@ export default function HomePage() {
         {
             title: 'Age Group',
             dataIndex: 'ageGroup',
-            key: 'ageGroup',
+            key: 'ageGroup',     //become select when click edit
             render: (text, record) => isEditing(record) ? (
                 <Select value={editingData.ageGroup}
                     onChange={value => setEditingData({ ...editingData, ageGroup: value })}>
@@ -194,7 +195,7 @@ export default function HomePage() {
             );
         },
     };
-
+     //delete request
     const handleDelete = async (key) => {
         const result = await deleteQuestion(storageUtils.getUser(), key);
         if (result.code === 200) {
@@ -206,7 +207,7 @@ export default function HomePage() {
             message.error(result.message);
         }
     };
-
+    //set the edit state
     const handleEdit = (key) => {
         console.log("Enter handle Edit......" + key)
         const currentRowData = questions.find((item) => item.id === key);
@@ -214,13 +215,13 @@ export default function HomePage() {
         setEditingKey(key);
     };
 
-    const handleSave = async (record) => { // 使用 async 以便内部使用 await
+    const handleSave = async (record) => { 
         const newData = [...questions];
         const index = newData.findIndex(item => record.id === item.id);
         const item = newData[index];
         const updatedItem = { ...item, ...editingData };
         newData.splice(index, 1, updatedItem);
-
+          //save the change
         const result = await editQuestion(storageUtils.getUser(), updatedItem.id, updatedItem.question, updatedItem.type, updatedItem.ageGroup, updatedItem.level); // 使用 await 和更新后的字段
         if (result.code == 200) {
             message.success("save edition successfully!");
@@ -243,7 +244,7 @@ export default function HomePage() {
                 <Button onClick={() => handleAddAnswer(record)}>Add Answer</Button>
         ),
     };
-
+    //combine the columns
     const columnsWithActions = [...columns, actionColumn, addAnswerColumn];
 
     return (
@@ -284,7 +285,7 @@ export default function HomePage() {
             <Table
                 dataSource={questions}
                 columns={columnsWithActions}
-                pagination={false}
+                pagination={false}  // ban the original pagination
                 scroll={{ x: '100%', y: '100%' }}
             />
             <div style={{ display: 'flex', justifyContent: 'center' }}>

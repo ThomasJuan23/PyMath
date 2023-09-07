@@ -7,11 +7,9 @@ const { Search } = Input;
 const { Option } = Select;
 
 export default function UserManagerPage() {
-    const history = useHistory();
     const [editingKey, setEditingKey] = useState('');
     const [editingData, setEditingData] = useState({});
     const isEditing = (record) => record.id === editingKey;
-    const [distinctTypes, setDistinctTypes] = useState([]);
     const [questions, setQuestions] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 5, total: 0 });
     const [filters, setFilters] = useState({
@@ -36,7 +34,7 @@ export default function UserManagerPage() {
     };
 
 
-
+// delete the user
     const handleDelete = async (key) => {
         const result = await deleteUser(key.email, storageUtils.getUser(), password);
         if (result.code === 200) {
@@ -49,7 +47,7 @@ export default function UserManagerPage() {
         }
         setPassword("");
     };
-
+//   edit thh user, and change the edit state
     const handleEdit = (key) => {
         console.log("Enter handle Edit......" + key)
         const currentRowData = questions.find((item) => item.id === key);
@@ -57,7 +55,7 @@ export default function UserManagerPage() {
         setEditingKey(key);
     };
 
-    const handleSave = async (record) => { // 使用 async 以便内部使用 await
+    const handleSave = async (record) => { 
         const newData = [...questions];
         const index = newData.findIndex(item => record.id === item.id);
         const item = newData[index];
@@ -79,16 +77,16 @@ export default function UserManagerPage() {
     useEffect(() => {
         fetchQuestions();
     }, [filters, pagination]);
-
+   //get user
     const fetchQuestions = async () => {
-        console.log("step1")
+    
         const { searchText, selectedType, email, id } = filters;
         const apiType = selectedType === 'All' ? null : selectedType;
         const data = await getUserList(pagination.current, apiType, searchText, email, id);
-        console.log("step2")
+       
         if (data.code === 200) {
             if (data.data.records) {
-                console.log("step3" + data.data.records)
+               
                 setQuestions(data.data.records);
             }
             if (data.data.total !== pagination.total) {
@@ -203,51 +201,14 @@ export default function UserManagerPage() {
         },
     ];
 
-    // const [columns, setColumns] = useState(baseColumns);
-
-
-    // useEffect(() => {
-    //     // 添加一个事件监听器来跟踪窗口大小
-    //     const updateColumns = () => {
-    //       // 获取窗口宽度
-    //       const width = window.innerWidth;
-      
-    //       // 根据窗口宽度动态调整列宽
-    //       if (width < 500) {
-    //         setColumns(baseColumns.map(col => ({
-    //           ...col,
-    //           width: col.width ? col.width * 0.5 : undefined
-    //         })));
-    //       } else if (width < 1000) {
-    //         setColumns(baseColumns.map(col => ({
-    //           ...col,
-    //           width: col.width ? col.width * 0.75 : undefined
-    //         })));
-    //       } else {
-    //         setColumns(baseColumns);
-    //       }
-    //     };
-      
-    //     // 初始更新
-    //     updateColumns();
-      
-    //     // 监听resize事件
-    //     window.addEventListener('resize', updateColumns);
-      
-    //     // 清除事件监听器
-    //     return () => {
-    //       window.removeEventListener('resize', updateColumns);
-    //     };
-    //   }, []);
-
     const handleOk = async () => {
-        setIsModalVisible(false);
+        setIsModalVisible(false);  //handle save or  delte, both need to check the password
         if (currentRecord.operation === 'save') {
             await handleSave(currentRecord);
         } else if (currentRecord.operation === 'delete') {
             await handleDelete(currentRecord);
         }
-    };
+    };    
 
     const actionColumn = {
         title: 'Action',
@@ -275,7 +236,7 @@ export default function UserManagerPage() {
     };
 
     const columnsWithAction = [...columns, actionColumn];
-
+  //handle fliter
     const handlePageChange = (page) => {
         setPagination({ ...pagination, current: page });
     };
@@ -332,7 +293,7 @@ export default function UserManagerPage() {
             </div>
 
             <Table
-                scroll={{ x: '130%', y: '100%' }}
+                scroll={{ x: '130%', y: '100%' }}  //table auto-sizing
                 dataSource={questions}
                 columns={columnsWithAction}
                 pagination={false}

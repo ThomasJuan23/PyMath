@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Avatar, List, Card, Button, Collapse, Pagination } from 'antd';
-import memoryUtils from '../../utils/memoryUtils';
 import { getMessageByReceiver } from '../../api'; // Import the API function for getting messages
 import storageUtils from '../../utils/storageUtils';
 
@@ -10,7 +9,7 @@ const Message = ({ history }) => {
   const [messages, setMessages] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
-
+  // get the mesages by reciever
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,7 +47,7 @@ const Message = ({ history }) => {
                   storageUtils.saveMessage(item.id);
                   if (item.type === 'question') {
                     storageUtils.saveQuestion(item.questionId);
-                    history.replace('/admin/addanswer');
+                    history.replace('/admin/addanswer');  //jump to different page according to the message type
                   } else {
                     storageUtils.saveThread(item.threadId);
                     history.replace('/admin/chat');
@@ -60,9 +59,9 @@ const Message = ({ history }) => {
             }
           >
             <List.Item.Meta
-              avatar={<Avatar src={"https://robohash.org/" + item.id + "?set=set4"} />}
+              avatar={<Avatar src={"https://robohash.org/" + item.id + "?set=set4"} />}  //get the avatars from the antd library
               title={`${item.sender} - ${item.type === 'question' ? 'New Question' : 'Message'} (${item.type})`}
-              description={
+              description={  //collapse information
                 <Collapse bordered={false} ghost={true}>
                   <p style={{ paddingLeft: 0 }}>Sender: {item.sender}</p>
                   <p style={{ paddingLeft: 0 }}>Message Id: {item.id}</p>

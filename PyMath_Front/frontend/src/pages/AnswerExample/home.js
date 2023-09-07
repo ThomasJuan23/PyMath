@@ -11,8 +11,8 @@ const Home = () => {
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
   const [run, setRun] = useState(true);
-  const [steps, setSteps] = useState([
-    {
+  const [steps, setSteps] = useState([   //basic joyride step
+    { 
       target: '.question-item',
       content: 'This is where the question is presented. Read it carefully.',
     },
@@ -40,7 +40,7 @@ const Home = () => {
 
     fetchQuestion();
   }, []);
-
+  //get the question, and the previous and next question
   const fetchQuestion = async () => {
     try {
       const result = await getQuestions(1, storageUtils.getQuestion(), null, null, null, null, null, null, null);
@@ -71,7 +71,7 @@ const Home = () => {
   const handleJoyrideCallback = (data) => {
     const { status } = data;
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      // 点击 "Skip" 或 "Done" 时，需要结束教程
+      // click skip or done to finish
       setRun(false);
     }
   };
@@ -80,7 +80,12 @@ const Home = () => {
 
 
 const handleFormSubmit = async () => {
-  const userAnswer = items.map((item) => item.content).join('\n');
+  const userAnswer = code;
+  //check null
+  if(code===""){
+    message.error("Please enter your code")
+  }
+  else{
   const result = await verifyAnswer(userAnswer, storageUtils.getQuestion());
 
   if (result.code === 200) {
@@ -95,6 +100,7 @@ const handleFormSubmit = async () => {
     setOutput(result.data);
     const data = await addHistory(storageUtils.getUser(),storageUtils.getQuestion(),userAnswer,result.message+result.data,type);
   }
+}
 };
 
 const handleNext = async() =>{
@@ -103,10 +109,10 @@ const handleNext = async() =>{
     const questionId = nextdata.data;
     if(questionId=="last one"){
       message.error("This is the last question")
-    }
+    }else{
     const result = await getQuestions(1, questionId, null, null, null, null, null, null, null);
     if (result.code === 200) {
-      storageUtils.saveQuestion(questionId);
+      storageUtils.saveQuestion(questionId);   //jump to different page according to the level
       const level = result.data.records[0].level;
       if(level==1)
       history.replace('/useradmin/dragexample')
@@ -118,7 +124,7 @@ const handleNext = async() =>{
       history.replace('/useradmin/answer')
     } else {
       message.error(result.message);
-    }
+    }}
   }else{
     message.error(nextdata.message);
   }
@@ -170,9 +176,9 @@ const handlePrevious = async() =>{
           display: 'flex',
           justifyContent: 'space-between',
           marginBottom: '10px',
-          width: '100%', // 让整个 div 占满宽度
+          width: '100%', // full
           position: 'absolute',
-          top: 0, // 将 div 置于页面顶部
+          top: 0, // set the buttons on the top
         }}
       >
         <button
@@ -185,7 +191,7 @@ const handlePrevious = async() =>{
             cursor: 'pointer',
             zIndex: 10001,
           }}
-          disabled={previous === "first one"} // 设为不可点击状态
+          disabled={previous === "first one"} //unclickable
         >
           Previous
         </button>
@@ -199,7 +205,7 @@ const handlePrevious = async() =>{
             cursor: 'pointer',
             zIndex: 10001,
           }}
-          disabled={next === "last one"} // 设为不可点击状态
+          disabled={next === "last one"} // unclickable
         >
           Next
         </button>
@@ -213,7 +219,7 @@ const handlePrevious = async() =>{
         showSkipButton={true}
         steps={steps.map((step, index) => {
           if (index === 1) {
-            // 在第二个步骤中添加 explain 内容
+            // add explian to the second step
             return {
               ...step,
               content: step.content + ' ' + explain,
@@ -232,11 +238,11 @@ const handlePrevious = async() =>{
 
       <h1>My Answer</h1>
 
-      <Form onFinish={handleFormSubmit} style={{ width: '400px', textAlign: 'center' }}>
+      <Form onFinish={handleFormSubmit} style={{ width: '400px' }}>
         <Form.Item label="Question" className='question-item'>
           <div>{question}</div>
         </Form.Item>
-        <Form.Item label="Answer" className='answer-item'>
+        <Form.Item label="Answer" className='answer-item' rules={[{ required: true, message: 'Please input your code!' }]}>  
           <MonacoEditor
             width="100%"
             height="300px"
@@ -248,7 +254,7 @@ const handlePrevious = async() =>{
             }}
           />
         </Form.Item>
-        <Form.Item>
+        <Form.Item style={{textAlign: 'center'}}>
           <Button type="primary" htmlType="submit" className='submit-item'>Submit</Button>
         </Form.Item>
       </Form>

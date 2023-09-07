@@ -1,25 +1,18 @@
 import React, { useState, useRef } from 'react'
 import logo from '../../assets/images/logo192.png'
 import './register.css'
-import emailjs from 'emailjs-com'
 import { reqSendEmail, verifyEmail, registerUser } from '../../api/index';
 
 
 import { useHistory } from 'react-router-dom';
 import {
-  AutoComplete,
   Button,
-  Cascader,
-  Checkbox,
   Col,
   Form,
   Input,
-  InputNumber,
   Row,
-  Select,
   Radio,
   message,
-  notification
 } from 'antd';
 const formItemLayout = {
   labelCol: {
@@ -52,100 +45,49 @@ const tailFormItemLayout = {
   },
 };
 
-
-
-
-const openNotification = () => {
-  notification.open({
-    message: 'It takes a few seconds',
-    description:
-      'Please wait for your approval by the administrator, you can log in to check your approval process; if you cannot log in, it proves that your account application has been rejected',
-    onClick: () => {
-      console.log('Notification Clicked!');
-    },
-  });
-};
 const App = () => {
   const history = useHistory()
   const [form] = Form.useForm();
   const [showDescription, setShowDescription] = useState(false);
   const formRef = useRef();
-  const [verificationCode, setVerificationCode] = useState(null);
   const sendEmail = async () => {
     const email = formRef.current.getFieldValue("email");
     const username = formRef.current.getFieldValue("username");
   
-    // 1. 检查 email 是否为空
+    // 1. check email valid
     if (!email) {
-      message.error("Please enter your email address."); // 使用 antd 的 message 组件显示错误消息
-      return; // 结束函数执行
+      message.error("Please enter your email address."); // message to show the error
+      return; 
     }
   
     try {
-      // 2. 调用后端 API 接口来发送电子邮件
+      // 2.req send email api
       const result = await reqSendEmail(email);
   
-      // 3. 检查响应码
+      // 3. check the code
       if (result.code !== 200) {
-        message.error(`An error occurred: ${result.message}`); // 反馈给客服
+        message.error(`An error occurred: ${result.message}`); 
       } else {
-        message.success("Verification email has been sent. If you donot receive your email in 1 min, please check your input"); // 告诉用户验证邮件已发送
+        message.success("Verification email has been sent. If you donot receive your email in 1 min, please check your input"); //show the succefully information
       }
     } catch (error) {
-      // 网络错误或其他问题
       message.error("An unexpected error occurred. Please try again later.");
     }
   };
-    // if (result && result.success) {
-    // // 这里假设后端返回了一个包含 "success" 字段的对象，您可以根据实际后端响应进行调整
-    //   message.success("Verification email sent successfully");
-    //  } else {
-    //   message.error("Failed to send verification email");
-    //    }
-   //  const email = formRef.current.getFieldValue("email");
-    // const username = formRef.current.getFieldValue("username");
-    // const code = Math.floor(100000 + Math.random() * 900000);
-    // setVerificationCode(code);
-    // console.log(code)
-    // const params = {
-    //   email: email,
-    //   username: username,
-    //   code: code
-    // }
-    // emailjs
-    //   .send('service_r5sgj3i', "template_qvv579v", params, "srp7GX-kcLCEPBT3R")
-    //   .then(
-    //     result => {
-    //       console.log(result.text)
-    //     },
-    //     error => {
-    //       console.log(error.text)
-    //       alert(error.text)
-    //     }
-    //   )
-//  }
   const onFinish = async (values) => {
-    // console.log('Received values of form: ', values);
-    // const { email, username, role, password, confirm, description, address, postcode } = values;
-    // // history.replace('/login')
-    // console.log('Received values of form' + description, address, postcode);
-    // console.log(role);
-
     const email = formRef.current.getFieldValue("email");
     const code = formRef.current.getFieldValue("code");
-  
-    // 1. 检查 email 是否为空
+
     if (!code) {
-      message.error("Please enter the verification Code."); // 使用 antd 的 message 组件显示错误消息
-      return; // 结束函数执行
+      message.error("Please enter the verification Code."); 
+      return; 
     }
   
-    try {
-      // 2. 调用后端 API 接口来发送电子邮件
+    try { //verify the email before register
       const result = await verifyEmail(email,code);
-      // 3. 检查响应码
+  
       if (result.code !== 200) {
-        message.error(`An error1111 occurred: ${result.message}`); // 反馈给客服
+        message.error(`An error1111 occurred: ${result.message}`); 
       } else {
         const username = formRef.current.getFieldValue("username");
         const password = formRef.current.getFieldValue("password");
@@ -157,10 +99,10 @@ const App = () => {
         const inst = formRef.current.getFieldValue("Institution");
         const real = formRef.current.getFieldValue("Real");
         const ID = formRef.current.getFieldValue("ID card");
-        //调用register函数
+        //req register
         const result2 = await registerUser(email,username,role,password,birthday,age,inst,real,ID,sQ,sA);
         if(result2.code!=200){
-          message.error(`An error2222 occurred: ${result2.message}`); 
+          message.error(`An error occurred: ${result2.message}`); 
         }
         else{
           message.success("Register Successfully")
@@ -168,7 +110,6 @@ const App = () => {
         }
       }
     } catch (error) {
-      // 网络错误或其他问题
       message.error("An unexpected error occurred. Please try again later.");
     }
   };
@@ -217,6 +158,7 @@ const App = () => {
           <Form.Item
             name="password"
             label="Password"
+            // chech if the password valid in real time
             rules={[
               {
                 required: true,
@@ -250,6 +192,7 @@ const App = () => {
                 required: true,
                 message: 'Please confirm your password!',
               },
+              // compare the password
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('password') === value) {
@@ -288,12 +231,13 @@ const App = () => {
                 whitespace: true,
               },
               {
+                // check the date format
                 validator: (_, value) => {
                   const regex = /^\d{4}-[01][0-9]-[0-3][0-9]$/;
                   if (regex.test(value)) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('Date format must be dd/mm/yyyy!'));
+                  return Promise.reject(new Error('Date format must be yyyy-mm-dd!'));
                 },
               },
             ]}
@@ -308,20 +252,6 @@ const App = () => {
               <Col span={16}>
                 <Form.Item
                   name="code"
-                  // rules={[
-                  //   {
-                  //     required: true,
-                  //     message: 'Please input the verification code!',
-                  //   },
-                  //   () => ({
-                  //     validator(_, value) {
-                  //       if (Number(value) === verificationCode) {
-                  //         return Promise.resolve();
-                  //       }
-                  //       return Promise.reject(new Error('The verification code is not correct!'));
-                  //     },
-                  //   }),
-                  // ]}
                   noStyle
                 >
                   <Input placeholder="Please input the verification code!" />
@@ -410,7 +340,7 @@ const App = () => {
               onChange={handleRoleChange}
             />
           </Form.Item>
-
+  {/* decide where show according to the role */}
           {showDescription && (
             <Form.Item
               name="Institution"

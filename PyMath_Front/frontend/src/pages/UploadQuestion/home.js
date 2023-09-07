@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Upload, Button, Form, Input, Select, Tooltip, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
-
+import {  Button, Form, Input, Select, Tooltip, message } from 'antd';
 import { QuestionCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import storageUtils from '../../utils/storageUtils';
 import { addQuestion, getDistinctTypes, getQuestions, getUserList, submitQuestion } from '../../api';
@@ -22,7 +20,7 @@ export default function Home() {
       try {
         const response = await getDistinctTypes();
         if (response.code === 200) {
-          setTypes(response.data); // Assuming the data is an array of strings
+          setTypes(response.data); 
         }
       } catch (error) {
         message.error('Failed to fetch types.');
@@ -34,35 +32,29 @@ export default function Home() {
 
 
   const handleFormSubmit = async(values) => {
-    // 在这里处理表单提交的逻辑
-
-    // 假设自定义类型存在于 customType0, customType1, ...
+    //  all cutom types
     const customTypeKeys = Object.keys(values).filter(key => key.startsWith('customType'));
 
-    // 如果存在自定义类型，使用最后一个自定义类型作为 type
+    // last one is the actual type
     let finalType = values.type;
     if (customTypeKeys.length > 0) {
       finalType = values[customTypeKeys[customTypeKeys.length - 1]];
     }
 
     const { question, level } = values;
-    const email = storageUtils.getUser();  // Assuming getUser function returns the email
+    const email = storageUtils.getUser();  
 
     try {
-      const userData = await getUserList(1,null,null,email,null);
-      if (userData.code === 200) {
-        console.log("step1");
+      const userData = await getUserList(1,null,null,email,null);  //get the age group
+      if (userData.code === 200) {  //add question request
         const response = await addQuestion(question, level, finalType, userData.data.records[0].ageGroup, email);
-      if (response.code === 200) {  // Assuming the API returns an object with a 'code' key
-        console.log("step2");
+      if (response.code === 200) { 
         message.success('Question successfully added!');
         history.replace('/teacheradmin/teacherhome')
       } else {
-        console.log("step3");
-        message.error(`Failed to add question: ${response.message}`);  // Assuming the API returns an object with a 'message' key
+        message.error(`Failed to add question: ${response.message}`);  
       }
      }else{
-      console.log("step4");
         message.error(userData.message);
      }
 
@@ -110,6 +102,7 @@ const handleBack = () => {
         <Form.Item name="question" label="Question">
           <Input.TextArea rows={4} />
         </Form.Item>
+        {/* get type according to the database */}
         <Form.Item name="type" label="Type">
           <Select style={{ width: '100%' }}>
             {types.map((type, index) => (
@@ -117,7 +110,7 @@ const handleBack = () => {
             ))}
           </Select>
         </Form.Item>
-
+      {/* new type */}
         <Button type="dashed" onClick={addCustomType} style={{ width: '100%', marginBottom: '16px' }}>
           <PlusOutlined /> Add More Type
         </Button>
@@ -135,7 +128,7 @@ const handleBack = () => {
     <Option value="4">4 <Tooltip title="Represents a real-world problem"><QuestionCircleOutlined /></Tooltip></Option>
   </Select>
 </Form.Item>
-<Form.Item style={{ textAlign: 'center' }}>  {/* 让Submit按钮居中 */}
+<Form.Item style={{ textAlign: 'center' }}>  {/* center the submit button */}
           <Button type="primary" htmlType="submit" style={{ backgroundColor: 'white', borderColor: '#1890ff', color: '#1890ff' }}>Submit</Button>  {/* 设置按钮的背景颜色为白色 */}
         </Form.Item>
       </Form>

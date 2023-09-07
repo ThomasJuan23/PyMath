@@ -10,7 +10,6 @@ const { RangePicker } = DatePicker;
 
 export default function HomePage() {
     const history = useHistory();
-    const [distinctTypes, setDistinctTypes] = useState([]);
     const [questions, setQuestions] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 5, total: 0 });
     const [filters, setFilters] = useState({searchText: null, start: null, end: null });
@@ -18,7 +17,7 @@ export default function HomePage() {
     useEffect(() => {
         fetchQuestions();
     }, [filters, pagination]);
-
+// fliter
     const handleSelectChange = (value) => {
         setFilters({ ...filters,  searchText: value });
         setPagination({ ...pagination, current: 1 });
@@ -28,7 +27,7 @@ export default function HomePage() {
         setFilters({ ...filters, start: dateStrings[0], end: dateStrings[1] });
         setPagination({ ...pagination, current: 1 }); // Reset to first page
     };
-
+// get question
     const fetchQuestions = async () => {
         const { searchText, start, end } = filters;
         const data = await getQuestionsByPage(pagination.current, storageUtils.getUser(), searchText, start, end);
@@ -93,7 +92,7 @@ export default function HomePage() {
             if(level==1)
             history.replace('/useradmin/dragexample')
             if(level==2)
-            history.replace('/useradmin/drag')
+            history.replace('/useradmin/drag')  // Implement navigation logic according to the level.
             if(level==3)
             history.replace('/useradmin/answerexample')
             if(level==4)
@@ -102,7 +101,7 @@ export default function HomePage() {
             error.message(result.message);
         }
         
-        // Implement navigation logic to the details page here.
+       
     };
 
     return (

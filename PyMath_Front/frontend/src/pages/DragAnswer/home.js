@@ -4,11 +4,11 @@ import { Button, Form, Select, message } from 'antd';
 import storageUtils from '../../utils/storageUtils';
 import { addHistory, getQuestions, verifyAnswer, getAfterQuestion, getBeforeQuestion } from '../../api';
 import './home.css';
-import m1 from '../../../public/mouse1.cur';
-import m2 from '../../../public/mouse2.cur';
-import m3 from '../../../public/mouse3.cur';
-import m4 from '../../../public/mouse4.cur';
-import m5 from '../../../public/mouse5.cur';
+import m1 from '../../assets/images/mouse1.cur';
+import m2 from '../../assets/images/mouse2.cur';
+import m3 from '../../assets/images/mouse3.cur';
+import m4 from '../../assets/images/mouse4.cur';
+import m5 from '../../assets/images/mouse5.cur';
 import { useHistory } from 'react-router-dom';
 
 const reorder = (list, startIndex, endIndex) => {
@@ -17,7 +17,7 @@ const reorder = (list, startIndex, endIndex) => {
   result.splice(endIndex, 0, removed);
   return result;
 };
-
+//all cursor options
 const cursorOptions = [
   { label: 'people', value: m1 },
   { label: 'mushroom', value: m2 },
@@ -31,13 +31,9 @@ const Home = () => {
   const [items, setItems] = useState([]);
   const [output, setOutput] = useState('');
   const [cursor, setCursor] = useState(cursorOptions[0].value);
-  const [run, setRun] = useState(true);
-  const [steps, setSteps] = useState([]);
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState([]);
-  const [explain, setExplain] = useState('');
   const [randomizedAnswer, setRandomizedAnswer] = useState([]);
-  const [randomizedExplain, setRandomizedExplain] = useState([]);
   const [type, setType] = useState('');
   const [previous, setPrevious] = useState('');
   const [next, setNext] = useState('');
@@ -47,7 +43,7 @@ const Home = () => {
 
     fetchQuestion();
   }, []);
-
+ //get the questions, same as ide answer page
   const fetchQuestion = async () => {
     try {
       const result = await getQuestions(1, storageUtils.getQuestion(), null, null, null, null, null, null, null);
@@ -74,7 +70,7 @@ const Home = () => {
       console.error('Error fetching question:', error);
     }
   };
-  useEffect(() => {
+  useEffect(() => {    //spilt the answer 
     const shuffledIndexes = [...Array(answer.length).keys()].sort(() => Math.random() - 0.5);
 
     const shuffledAnswer = shuffledIndexes.map((index) => answer[index]);
@@ -82,7 +78,7 @@ const Home = () => {
     setRandomizedAnswer(shuffledAnswer);
   }, [answer]);
 
-  useEffect(() => {
+  useEffect(() => {   //split the darg-and-drop items
     const initialItems = randomizedAnswer.map((content, index) => ({
       id: `item-${index}`,
       content: content,
@@ -91,13 +87,13 @@ const Home = () => {
     setItems(initialItems);
   }, [randomizedAnswer]);
 
-
+   //drop
   const handleOnDragEnd = (result) => {
     if (!result.destination) return;
     const itemsClone = reorder(items, result.source.index, result.destination.index);
     setItems(itemsClone);
   };
-
+  //verify the answer
   const handleFormSubmit = async () => {
     const userAnswer = items.map((item) => item.content).join('\n');
     const result = await verifyAnswer(userAnswer, storageUtils.getQuestion());
@@ -171,7 +167,7 @@ const Home = () => {
     }
 
   }
-
+  //drag and drop style
   function getItemStyle(isDragging, draggableStyle) {
     return {
       cursor: `url(${cursor}), auto`,
@@ -207,7 +203,7 @@ const Home = () => {
             cursor: 'pointer',
             zIndex: 10001,
           }}
-          disabled={previous === "first one"} // 设为不可点击状态
+          disabled={previous === "first one"} //unclickable
         >
           Previous
         </button>
@@ -221,7 +217,7 @@ const Home = () => {
             cursor: 'pointer',
             zIndex: 10001,
           }}
-          disabled={next === "last one"} // 设为不可点击状态
+          disabled={next === "last one"} // unclickable
         >
           Next
         </button>
@@ -231,6 +227,8 @@ const Home = () => {
         <Form.Item label="Question" className="question-item">
           <div>{question}</div>
         </Form.Item>
+
+        {/* choose the cursor */}
         <Form.Item label="Cursor Style" className="cursor-item">
           <Select defaultValue={cursorOptions[0].label} onChange={(value) => setCursor(value)}>
             {cursorOptions.map(({ label, value }) => (
@@ -241,6 +239,8 @@ const Home = () => {
           </Select>
         </Form.Item>
         <Form.Item label="Answer" className="answer-item">
+
+          {/* drag and drop */}
           <DragDropContext onDragEnd={handleOnDragEnd}>
             <Droppable droppableId="droppable">
               {(provided) => (

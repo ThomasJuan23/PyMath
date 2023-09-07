@@ -32,7 +32,7 @@ export default function HomePage() {
   useEffect(() => {
     fetchQuestions();
   }, [filters, pagination]);
-
+  //get questions
   const fetchQuestions = async () => {
     const { searchText, selectedType, start, end } = filters;
     const apiType = selectedType === 'All' ? null : selectedType;
@@ -83,6 +83,7 @@ export default function HomePage() {
       title: 'Question Content',
       dataIndex: 'question',
       key: 'question',
+      // after click edit, it should be a input box
       render: (text, record) => isEditing(record) ? (
         <Input value={editingData.question}
           onChange={e => setEditingData({ ...editingData, question: e.target.value })} />
@@ -159,13 +160,12 @@ export default function HomePage() {
 
 
   const handleEdit = (key) => {
-    console.log("Enter handle Edit......" + key)
-    const currentRowData = questions.find((item) => item.id === key);
+    const currentRowData = questions.find((item) => item.id === key); //get the question item which sould be edited
     setEditingData(currentRowData);
     setEditingKey(key);
   };
 
-  const handleSave = async (record) => { // 使用 async 以便内部使用 await
+  const handleSave = async (record) => { 
     const newData = [...questions];
     const index = newData.findIndex(item => record.id === item.id);
     const item = newData[index];
@@ -190,7 +190,7 @@ export default function HomePage() {
       <Button onClick={() => handleDetailClick(record)}>View Detail</Button>
     ),
   };
-
+  //combine columns
   const columnsWithActions = [...columns, actionColumn, addAnswerColumn];
 
   const handleDetailClick = (record) => {
@@ -222,6 +222,7 @@ export default function HomePage() {
           onSearch={handleSearch}
           style={{ width: 200, marginRight: 16 }}
         />
+        {/* the type content should be decided by the database */}
         <Select
           placeholder="Filter by Type"
           onChange={handleSelectChange}

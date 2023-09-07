@@ -15,7 +15,7 @@ const buttonStyle = {
 const Home = () => {
 
   const history = useHistory()
-  const [form] = Form.useForm(); // 获取 form 实例
+  const [form] = Form.useForm(); // get the value of the form at any time
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
   const [question, setQuestion] = useState([]);
@@ -24,13 +24,11 @@ const Home = () => {
   const [explain, setExplain] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const codeLineCount = code.split('\n').length;
-
-  // ... (the rest of your useEffects and functions)
-
+//password check modal
   const showModal = () => {
     setIsModalVisible(true);
   };
-
+//edit logic
   const handleOk = async () => {
     setIsModalVisible(false);
     const data = await editAnswer(storageUtils.getQuestion(), code, storageUtils.getUser(), password, explain);
@@ -98,6 +96,7 @@ const Home = () => {
           <div>{level}</div>
         </Form.Item>
         <Form.Item label="Answer">
+          {/* IDE */}
           <MonacoEditor
             width="100%"
             height="300px"
@@ -119,7 +118,8 @@ const Home = () => {
               message: 'Explanation is required for level 1 questions.',
             },
           ]}
-        >
+        > 
+        {/* AUTO-LINE CHANGED */}
           <Input.TextArea
             rows={codeLineCount}
             onChange={(e) => {

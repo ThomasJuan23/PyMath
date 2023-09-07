@@ -8,7 +8,7 @@ import AdminHome from './pages/Admin/Admin';
 import Reset from './pages/ResestPassword/Reg';
 import ReactLive2d from 'react-live2d';
 
-
+//the click message of teh live2d model
 const encouragementMessages2 = [
   "Keep going!",
   "Math is the language of the universe",
@@ -34,7 +34,7 @@ function App() {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    // 设置初始位置
+    // initial position
     const setInitialPosition = () => {
       setPosition({
         x: window.innerWidth - 25,
@@ -42,26 +42,26 @@ function App() {
       });
     };
 
-    // 当窗口大小改变时，更新位置
+    // reset teh initial position when the windows resize
     const handleResize = () => {
       setInitialPosition();
     };
 
-    // 设置初始位置并添加事件监听器
     setInitialPosition();
     window.addEventListener('resize', handleResize);
 
-    // 在组件卸载时移除事件监听器
     return () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
+  
+  //test move mouse down
   const handleMouseDown = (e) => {
     setMouseDown(true);
     setInitialMousePosition({ x: e.clientX, y: e.clientY });
   };
-
+  
+  //move the live2d model
   const handleMouseMove = (e) => {
     if (mouseDown) {
       setOffset({
@@ -81,6 +81,7 @@ function App() {
     setDragging(false);
   };
 
+   //resize the live2d model
   const handleWheel = (e) => {
     if (e.deltaY < 0) {
       setScale((prevScale) => Math.min(prevScale + 0.1, 2));
@@ -114,6 +115,7 @@ function App() {
           menuList={[]}
         />
       </div>
+      {/* common path design */}
       <BrowserRouter>
         <Switch>
           <Route path="/login" component={Login} />

@@ -4,7 +4,7 @@ import MonacoEditor from 'react-monaco-editor';
 import storageUtils from '../../utils/storageUtils';
 import { runCode, getQuestions, provideAnswer, deleteMessagesByQuestionId } from '../../api';
 import { useHistory } from 'react-router-dom';
-
+//set the stype of button
 const buttonStyle = {
   backgroundColor: 'white',
   color: '#60A3D9',
@@ -23,13 +23,11 @@ const Home = () => {
   const [explain, setExplain] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const codeLineCount = code.split('\n').length;
-
-  // ... (the rest of your useEffects and functions)
-
+  // password verification modal
   const showModal = () => {
     setIsModalVisible(true);
   };
-
+  //add the answer request
   const handleOk = async () => {
     setIsModalVisible(false);
     const data = await provideAnswer(storageUtils.getQuestion(), code, storageUtils.getUser(), password, explain);
@@ -56,7 +54,7 @@ const Home = () => {
   useEffect(() => {
     fetchQuestions();
   }, []);
-
+  //test the code
   const handleFormSubmit = async () => {
     const result = await runCode(code);
     if (result.code === 200) {
@@ -78,7 +76,7 @@ const Home = () => {
     }
     // handle response from provideAnswer
   }
-
+  // get the questions
   const fetchQuestions = async () => {
     const data = await getQuestions(1, storageUtils.getQuestion(), null, null, null, null, null, null, null);
     if (data.code === 200) {
@@ -110,6 +108,7 @@ const Home = () => {
           <div>{level}</div>
         </Form.Item>
         <Form.Item label="Answer">
+          {/* IDE Editor */}
           <MonacoEditor
             width="100%"
             height="300px"
@@ -121,6 +120,7 @@ const Home = () => {
             }}
           />
         </Form.Item>
+        {/* Explain Editor */}
         <Form.Item
           name="explain"
           label="Explain"
@@ -131,7 +131,8 @@ const Home = () => {
               message: 'Explanation is required for level 1 questions.',
             },
           ]}
-        >
+        > 
+        {/* control the line of the explain editor is the same as code */}
           <Input.TextArea
             rows={codeLineCount}
             onChange={(e) => setExplain(e.target.value)}

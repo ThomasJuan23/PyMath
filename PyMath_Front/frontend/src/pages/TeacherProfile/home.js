@@ -9,7 +9,7 @@ export default function TeacherProfileEdit() {
     const history = useHistory();
     const [form] = Form.useForm();
     const [info, setInfo] = useState({});
-
+  //get User information
     useEffect(() => {
         (async () => {
             const result = await getUserList(1, null, null, storageUtils.getUser(), null);
@@ -22,7 +22,7 @@ export default function TeacherProfileEdit() {
             }
         })();
     }, [form]);
-
+  //request change 
     const handleFinish = async(values) => {
         console.log('Saving changes:', values);
         const data = await changeInfoUserend(storageUtils.getUser(), values.userName, values.birthday, values.ageGroup, values.institution, values.realName, values.schoolId);
@@ -39,7 +39,7 @@ export default function TeacherProfileEdit() {
             message.error(data.message);
         }
     };
-
+  //clear to the origin value
     const handleClear = () => {
         form.resetFields();
     };
@@ -107,7 +107,7 @@ export default function TeacherProfileEdit() {
                 >
                     <Input />
                 </Form.Item>
-
+  {/* tell user how to reset password and safe question */}
                 <Form.Item>
                     <Link to="/reset">Reset Password </Link> 
                     <p>(Save Changes Before you go to the reset password page)</p>

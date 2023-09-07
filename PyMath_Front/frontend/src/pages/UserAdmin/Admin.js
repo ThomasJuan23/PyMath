@@ -30,7 +30,8 @@ const App = () => {
       <Layout className="site-layout">
         <MHeader />
         <Content style={{ margin: '0 0px' }}>
-          <Switch>
+          <Switch>    
+            {/* user admin routh path design */}
             <Route path="/useradmin/answer" component={Answer} />
             <Route path="/useradmin/drag" component={Drag} />
             <Route path="/useradmin/dragexample" component={DragExample} />

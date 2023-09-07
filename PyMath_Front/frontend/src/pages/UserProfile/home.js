@@ -9,7 +9,7 @@ export default function TeacherProfileEdit() {
     const history = useHistory();
     const [form] = Form.useForm();
     const [info, setInfo] = useState({});
-
+  //get the student information
     useEffect(() => {
         (async () => {
             const result = await getUserList(1, null, null, storageUtils.getUser(), null);
@@ -22,7 +22,7 @@ export default function TeacherProfileEdit() {
             }
         })();
     }, [form]);
-
+  //change the genral user information
     const handleFinish = async(values) => {
         console.log('Saving changes:', values);
         const data = await changeInfoUserend(storageUtils.getUser(),values.userName,values.birthday,null,null,null,null);
@@ -39,7 +39,7 @@ export default function TeacherProfileEdit() {
             message.error(data.message);
         }
     };
-
+// back to the origin value
     const handleClear = () => {
         form.resetFields();
     };
@@ -63,7 +63,7 @@ export default function TeacherProfileEdit() {
 
                 <Form.Item 
                     label="Birthday" 
-                    name="birthday" 
+                    name="birthday"   //date format
                     rules={[
                         { required: true, message: 'Please input your birthday!' },
                         { pattern: /\d{4}-\d{2}-\d{2}/, message: 'The date format must be yyyy-mm-dd!' }
@@ -71,7 +71,7 @@ export default function TeacherProfileEdit() {
                 >
                     <Input />
                 </Form.Item>
-
+    {/* tell user how to reset password and safe question */}
                 <Form.Item>
                     <Link to="/reset">Reset Password </Link> 
                     <p>(Save Changes Before you go to the reset password page)</p>

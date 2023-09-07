@@ -16,13 +16,13 @@ const App = () => {
 
   const onFinish_email = async (values) => {
     const { email, password } = values;
-    const result = await loginUser(email, password);//把用户名密码传过去，用了ES6的async，await
+    const result = await loginUser(email, password);//check login info request
     if (result.code === 200) {
       const result2 = await getUserList(1,null,null,email,null);
       if(result2.code == 200){
       storageUtils.saveUser(email);
       const role = result2.data.records[0].type
-      // 跳转到导航页面
+      // jump to different end
       if (role === "student") {
         history.replace('/useradmin')
         message.success('login successfully')
@@ -42,12 +42,10 @@ const App = () => {
 
   };
   
-  //嘎嘎偷
   return (
     <div className='login'>
       <div className="login-header">
         <img src={logo} alt="" />
-        {/* 模块化输出搞个图 */}
         <h1>PyMath</h1>
       </div>
       <div className='login-content'>
@@ -65,7 +63,7 @@ const App = () => {
               >
                 <Form.Item
                   name="email"
-                  //自定义式的验证各种出错,这个是声明式验证
+                  //real time check
                   rules={[
                     {
                       required: true,
@@ -81,9 +79,9 @@ const App = () => {
                 </Form.Item>
                 <Form.Item
                   name="password"
-
+  //password rule
                   rules={[
-                    // { validator: this.validatorPwd }          
+                 
                     {
                       required: true,
                       message: 'Please input your Password!',
@@ -103,7 +101,7 @@ const App = () => {
                     }
                   ]}
                 >
-                  {/* 输入不对时弹行字 */}
+                  {/* password input */}
                   <Input
                     prefix={<LockOutlined className="site-form-item-icon" />}
                     type="password"
@@ -111,7 +109,7 @@ const App = () => {
                   />
                 </Form.Item>
                 <Form.Item>
-
+              {/* reset password */}
                   <Link className="login-form-forgot" to="/reset">
                     Forgot password
                   </Link>

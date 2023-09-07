@@ -14,7 +14,7 @@ const ChatInterface = () => {
     const pageSize = 5;
     const [currentPage, setCurrentPage] = useState(0); // Track the current page
 
-    useEffect(() => {
+    useEffect(() => { //get the newest message
         async function fetchLastPage() {
             try {
                 const initialResult = await getMessageByThread(1, storageUtils.getThread());
@@ -41,11 +41,11 @@ const ChatInterface = () => {
         }
 
         fetchLastPage();
-
+      // set the socket
         const socket = new SockJS('http://localhost:3030/websocket-endpoint');
         const stompClient = Stomp.over(socket);
         stompClient.reconnect_delay = 5000;  // Add this line for reconnection delay
-
+   //prepare for receive the socket broadcast
         stompClient.connect({}, () => {
             console.log(currentUser);
             stompClient.subscribe(`/topic/replies`, (message) => {
@@ -66,7 +66,7 @@ const ChatInterface = () => {
             console.log('STOMP:', error);
             setTimeout(() => {
                 stompClient.connect({}, () => {
-                    // 重连后的逻辑，可以和上面正常连接的逻辑相同
+                    // re-connect
                     stompClient.subscribe(`/topic/replies`, (message) => {
                         const newMessage = JSON.parse(message.body);
                         console.log(newMessage);
@@ -82,8 +82,6 @@ const ChatInterface = () => {
                     });
                 }, (error) => {
                     console.log("STOMP: Reconnect failed:", error);
-                    // 这里可以递归地调用自身以持续尝试重新连接
-                    // 或者设置一个最大重连尝试次数
                 });
             }, stompClient.reconnect_delay);
         });
@@ -106,6 +104,7 @@ const ChatInterface = () => {
 
     const handleSendMessage = async () => {
         if (newMessage.trim() !== '') {
+            //judge the receiver
             let receiver = '';
             if (messages.length > 0) {
                 const lastMessage = messages[messages.length - 1];
@@ -131,13 +130,16 @@ const ChatInterface = () => {
                 message.error('An error occurred while sending message');
             }
         }
+        else{
+            message.error("Please input something")
+        }
     };
 
     const handleLoadMore = async () => {
         const prevPage = currentPage - 1;
         setCurrentPage(prevPage);
 
-        // 添加一个非空检查
+        // not null check
         if (chatContainerRef.current) {
             const oldScrollHeight = chatContainerRef.current.scrollHeight;
 
@@ -145,17 +147,20 @@ const ChatInterface = () => {
             if (result.code === 200 && result.data.records.length > 0) {
                 setMessages(prevState => [...result.data.records, ...prevState]);
 
-                // 一点时间延迟以便DOM更新
+                // update the dom
                 setTimeout(() => {
                     if (chatContainerRef.current) {
-                        // 再次添加一个非空检查
+                        // not null check
                         const newScrollHeight = chatContainerRef.current.scrollHeight;
                         const scrollDifference = newScrollHeight - oldScrollHeight;
 
-                        // 设置新的滚动位置
+                        //new scroll position
                         chatContainerRef.current.scrollTop = scrollDifference;
                     }
                 }, 100);
+            }
+            else{
+                message.error(result.message);
             }
         }
     };
@@ -180,7 +185,8 @@ const ChatInterface = () => {
 
                     dataSource={messages}
                     renderItem={message => (
-                        <List.Item style={{ display: 'flex', justifyContent: message.sender === currentUser ? 'flex-end' : 'flex-start' }}>
+                        // sender is on the right, receiver is on the left
+                        <List.Item style={{ display: 'flex', justifyContent: message.sender === currentUser ? 'flex-end' : 'flex-start' }}>  
                             <div style={{ maxWidth: '70%', overflowWrap: 'break-word', borderRadius: '15px', padding: '10px', background:  '#f7f7f7' }}>
                                 <strong>{message.sender}</strong> - {message.createTime}
                                 <p>{message.content}</p>

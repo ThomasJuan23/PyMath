@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+//This class primarily implements API, each of which is thoroughly annotated in the backend for explanation
 const baseUrl = 'http://localhost:3030';
 
 export const reqSendEmail = async (emailAddress) => {
