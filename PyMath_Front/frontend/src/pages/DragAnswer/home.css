@@ -1,0 +1,30 @@
+.site-layout-background {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #f0f2f5;
+  }
+  
+  .dnd-item {
+    user-select: none;
+    padding: 8px;
+    margin: 0 0 8px 0;
+    border: 1px solid #ddd;
+    cursor: grab; /* Change the cursor when hovering over the item */
+  }
+  
+  .dnd-item.is-dragging {
+    cursor: grabbing; /* Change the cursor when dragging the item */
+  }
+  
+  .droppable-container {
+    padding: 10px;
+    width: 250px;
+    border: 1px solid #000;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  
